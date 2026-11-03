@@ -12,7 +12,7 @@ for(const file of files){
 }
 if(findings.length){console.error(findings.join('\n'));process.exit(1);}
 if(process.argv.includes('--check')){console.log(`PASS: ${files.length} tracked source files scanned; release paths and known secret patterns clean.`);process.exit(0);}
-const out=path.resolve(process.argv[2]||path.join(ROOT,'..','rock-build-kit-v1.0.0.zip'));
+const out=path.resolve(process.argv[2]||path.join(ROOT,'..','rock-build-kit-v1.1.0.zip'));
 execFileSync('git',['archive','--format=zip','--prefix=rock-build-kit/','HEAD','-o',out],{cwd:ROOT});
 fs.writeFileSync(out+'.sha256',createHash('sha256').update(fs.readFileSync(out)).digest('hex')+'  '+path.basename(out)+'\n');
 console.log(out);

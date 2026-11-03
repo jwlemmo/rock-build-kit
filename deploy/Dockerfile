@@ -5,6 +5,7 @@ RUN npm ci
 COPY mcp/tsconfig.json ./
 COPY mcp/src ./src
 COPY mcp/scripts ./scripts
+COPY mcp/guides ./guides
 RUN npm run build
 FROM node:22-slim
 WORKDIR /app

@@ -79,7 +79,11 @@ Doctor tests version, identity, v2 campus read, plain Lava, and SQL `SELECT 1`, 
 
 Then ask the client to list tools and call `list_campuses`. Confirm the reported target. Offline verification is `cd mcp && npm test`. Once you approve a test build, create a disposable page beneath a reviewed parent, verify its content and effective permissions in the browser, and use the guarded restore preview to remove it. Never test by editing a real person or gift.
 
-## 6. Remote connector for web chat (Claude and ChatGPT)
+## 6. Web and Work connections
+
+**For ChatGPT Chat and Work use [CHATGPT-WORK.md](CHATGPT-WORK.md)**. That is the supported private-tunnel/plugin path and includes separate verification in both modes. The older hosted HTTP option below is useful for compatible clients; it does not implement OAuth for ChatGPT.
+
+### Optional hosted HTTPS connector
 
 The included server supports Streamable HTTP with a separate MCP bearer secret. Use your own always-on host reachable by your client, DNS, and TLS. The Docker example uses Caddy HTTPS. Keep the Rock key only on the server. The bearer secret is a different random secret (32+ random bytes recommended). Remote access has the permissions of that single configured operator; use separate deployments/keys for different users or churches.
 
@@ -91,9 +95,7 @@ docker compose --env-file deploy/.env -f deploy/compose.yml up --build -d
 
 The preparation script generates a random MCP secret locally and never prints it. HTTPS is terminated by Caddy; only ports 80/443 are published. Persisted logs need backup/access controls. Ensure the Docker volume is writable by UID 1000 (the image's node user). Check `https://YOUR_DOMAIN/healthz`, then run `node scripts/verify-remote.mjs https://YOUR_DOMAIN/mcp` with `MCP_BEARER_TOKEN` provided securely in the environment. This verifies the MCP handshake and tool listing, without writing to Rock.
 
-In the client's custom MCP connector/app settings, add `https://YOUR_DOMAIN/mcp` and bearer authentication where supported. If the client cannot supply a bearer header, this server also accepts `https://YOUR_DOMAIN/mcp/YOUR_MCP_SECRET`. That URL is a credential: enter it privately, do not put it in a shared project/file or access log. Caddy access logging is not enabled. If your workspace requires OAuth, this bearer-only example is insufficient; use an approved OAuth gateway or supported secure tunnel. Do not mark an unauthenticated public endpoint as safe.
-
-Claude's remote connectors work across its surfaces; local plugin support differs. ChatGPT custom MCP/developer-mode and network features depend on the user's plan and workspace settings. The agent should inspect the actual account settings and current official documentation before promising availability. Hosted chat generally cannot operate the user's local browser: complete initial Rock provisioning in the local agent/browser first.
+For clients that explicitly support fixed bearer credentials, configure the HTTPS endpoint and enter the secret privately. Do not assume a fixed bearer header or secret URL works in ChatGPT's custom MCP form. Use CHATGPT-WORK.md's tunnel setup for ChatGPT, or provide a reviewed OAuth gateway for a public server. Account/workspace policy still applies.
 
 ## Sources checked for this edition
 

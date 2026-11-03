@@ -1,11 +1,11 @@
 {
   "name": "rock-mcp-server-v2",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "MCP server for Rock RMS \u2014 v2-first with v1 fallbacks; guarded build writes (rock_create/edit/delete) with audit, snapshots, impact analysis",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "build": "node scripts/gen-build-info.mjs && tsc",
+    "build": "node scripts/gen-build-info.mjs && tsc && node scripts/copy-guides.mjs",
     "start": "node dist/index.js",
     "dev": "node scripts/gen-build-info.mjs && tsc --watch",
     "test": "node test/offline.mjs"

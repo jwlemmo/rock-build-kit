@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {appId,prepare} from '../../scripts/prepare-chatgpt-plugin.mjs';
+import {quoteCommand,tunnelConfig,initArgs} from '../../scripts/chatgpt-tunnel.mjs';
+import {selectAsset} from '../../scripts/install-tunnel.mjs';
+import {getBuildGuide} from '../dist/tools/guides.js';
+const dir=fs.mkdtempSync(path.join(os.tmpdir(),'rock chat test '));
+try{
+ assert.equal(appId('plugin_asdk_app_testing'),'asdk_app_testing');
+ assert.equal(appId('https://chatgpt.com/plugins/plugin_asdk_app_testing'),'asdk_app_testing');
+ assert.throws(()=>appId('https://evil.example/plugins/plugin_asdk_app_testing'));
+ assert.throws(()=>appId('../../secret'));
+ assert.equal(quoteCommand(['/a b/node','c"d']), '"/a b/node" "c\\"d"');
+ for(const d of ['local','skills/test','reference','mcp/reference'])fs.mkdirSync(path.join(dir,d),{recursive:true});
+ fs.writeFileSync(path.join(dir,'skills/test/SKILL.md'),'# Test');
+ fs.writeFileSync(path.join(dir,'plugin.json'),JSON.stringify({name:'rock-build-kit',version:'1.1.0',description:'test',extensions:{'com.openai':{interface:{displayName:'Rock'}}}}));
+ fs.writeFileSync(path.join(dir,'local/openai-dev.env'),'CONTROL_PLANE_TUNNEL_ID=tunnel_test\nCONTROL_PLANE_API_KEY=test-only\n');
+ process.env.ROCK_API_KEY='must-not-inherit';process.env.OPENAI_API_KEY='must-not-inherit';
+ const c=tunnelConfig('dev',dir);assert.equal(c.env.ROCK_API_KEY,undefined);assert.equal(c.env.OPENAI_API_KEY,undefined);assert.equal(c.env.CONTROL_PLANE_API_KEY,'test-only');
+ const args=initArgs(c);assert(args.includes(c.profileDir));assert(args.includes('127.0.0.1:0'));assert(!args.join(' ').includes('test-only'));
+ const result=prepare('plugin_asdk_app_testing',dir);assert.equal(JSON.parse(fs.readFileSync(path.join(result.dest,'.app.json'))).apps['rock-rms'].id,'asdk_app_testing');
+ assert(!fs.existsSync(path.join(result.dest,'.mcp.json')));assert(!fs.existsSync(path.join(result.dest,'mcp.json')));
+ assert(!fs.existsSync(path.join(result.dest,'local')));assert.throws(()=>prepare('asdk_app_testing',dir),/exists/);
+ const a={name:'tunnel-client-v9.0.0-darwin-arm64.zip',browser_download_url:'https://github.com/openai/tunnel-client/releases/download/v9.0.0/test.zip',digest:'sha256:'+'a'.repeat(64)};
+ assert.equal(selectAsset({tag_name:'v9.0.0',assets:[a]},'darwin','arm64'),a);
+ assert.throws(()=>selectAsset({tag_name:'v9.0.0',assets:[{...a,digest:undefined}]},'darwin','arm64'));
+ assert((await getBuildGuide({topic:'chatgpt'})).content.includes('Secure MCP Tunnel'));
+ await assert.rejects(()=>getBuildGuide({topic:'../local/openai-prod.env'}));
+ console.log('Chat/Work app binding, isolated tunnel config, guide delivery and download validation passed.');
+}finally{fs.rmSync(dir,{recursive:true,force:true});}

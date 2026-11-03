@@ -2,9 +2,11 @@
 
 A self-contained, church-neutral Rock RMS building toolkit for Claude and ChatGPT/Codex.
 
+**For ChatGPT Chat and Work: [CHATGPT-WORK.md](CHATGPT-WORK.md).**
+
 **Start with [START-HERE.md](START-HERE.md)**. Give that prompt and this folder to your local agent. Installation: `node scripts/install.mjs`. Setup and browser provisioning: [SETUP.md](SETUP.md).
 
-Includes the full upstream MCP server (55 tools), build/restore library, query and build skills, admin browser helper, Lava/attribute tools, portable change-management helpers, offline tests, and a Docker/HTTPS deployment for remote chat. Source provenance and changes are in [UPSTREAM.json](UPSTREAM.json) and [PORTABILITY.md](PORTABILITY.md).
+Includes the full upstream MCP server (56 tools), build/restore library, query and build skills, admin browser helper, Lava/attribute tools, portable change-management helpers, offline tests, and a Docker/HTTPS deployment for remote chat. Source provenance and changes are in [UPSTREAM.json](UPSTREAM.json) and [PORTABILITY.md](PORTABILITY.md).
 
 | Client | Connection |
 |---|---|
@@ -12,8 +14,8 @@ Includes the full upstream MCP server (55 tools), build/restore library, query a
 | Codex app / CLI | `node scripts/install.mjs --register codex`; shared user MCP config |
 | Claude Desktop Chat | Merge generated Desktop JSON into app config and restart |
 | Claude Cowork | Local plugin on supported desktop versions; otherwise remote connector |
-| ChatGPT Work with local execution | Codex/local host setup if its tools support local MCP |
-| Ordinary Claude / ChatGPT web chat | Hosted HTTPS MCP, account/workspace permission required |
+| ChatGPT Chat and Work (web or desktop) | Private Secure MCP Tunnel + installed custom app; see CHATGPT-WORK.md |
+| Claude web chat | Hosted HTTPS MCP; account/workspace permission required |
 
 No credentials or inherited private Git history are included. Do not publish local `.env`, audit logs, backups, or discovery output. New-object tools write immediately; guarded edits/deletes/restores preview before confirmation. See [SECURITY.md](SECURITY.md).
 

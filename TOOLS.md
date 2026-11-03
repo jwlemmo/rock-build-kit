@@ -1,9 +1,10 @@
 # Included MCP tools
 
-All 55 upstream tools are retained. Read means no intentional Rock data mutation; it can still access sensitive data. Guarded edits use preview tokens; other writes may execute immediately.
+All 55 upstream tools are retained, plus get_build_guide for clients without local file access. Read means no intentional Rock data mutation; it can still access sensitive data. Guarded edits use preview tokens; other writes may execute immediately.
 
 | Tool | Category |
 |---|---|
+| `get_build_guide` | Read — bundled instructions; no Rock request |
 | `search_people` | Read |
 | `get_person` | Read |
 | `update_person` | Write — executes immediately |

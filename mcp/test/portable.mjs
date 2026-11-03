@@ -24,8 +24,9 @@ let child;let client;
 try {
  client=new Client({name:'test',version:'1.0.0'});
  await client.connect(new StdioClientTransport({command:process.execPath,args:[path.join(root,'dist/index.js')],env,stderr:'pipe'}));
- const {tools}=await client.listTools();assert.equal(tools.length,55);assert.equal(new Set(tools.map(t=>t.name)).size,55);
+ const {tools}=await client.listTools();assert.equal(tools.length,56);assert.equal(new Set(tools.map(t=>t.name)).size,56);
  assert(tools.find(t=>t.name==='execute_sql').annotations.readOnlyHint);
+ const guide=await client.callTool({name:'get_build_guide',arguments:{topic:'build'}});assert(!guide.isError);assert(guide.content[0].text.includes('rock-build'));
  const result=await client.callTool({name:'list_campuses',arguments:{}});assert(!result.isError);
  const before=requests.length;const refusal=await client.callTool({name:'execute_sql',arguments:{query:'DELETE FROM Person'}});assert(refusal.isError);assert.equal(requests.length,before);
  await client.close();client=undefined;
@@ -37,7 +38,7 @@ try {
  assert.equal((await fetch(base+'/mcp',{method:'POST'})).status,401);
  client=new Client({name:'http-test',version:'1.0.0'});
  await client.connect(new StreamableHTTPClientTransport(new URL(base+'/mcp'),{requestInit:{headers:{Authorization:'Bearer test-only-bearer-token-123456789'}}}));
- assert.equal((await client.listTools()).tools.length,55);await client.close();client=undefined;
- client=new Client({name:'url-test',version:'1.0.0'});await client.connect(new StreamableHTTPClientTransport(new URL(base+'/mcp/test-only-bearer-token-123456789')));assert.equal((await client.listTools()).tools.length,55);
- console.log('Portable ID discovery, preflight refusal, 55-tool stdio/HTTP handshake, auth, and read-only SQL rejection passed.');
+ assert.equal((await client.listTools()).tools.length,56);await client.close();client=undefined;
+ client=new Client({name:'url-test',version:'1.0.0'});await client.connect(new StreamableHTTPClientTransport(new URL(base+'/mcp/test-only-bearer-token-123456789')));assert.equal((await client.listTools()).tools.length,56);
+ console.log('Portable ID discovery, preflight refusal, 56-tool stdio/HTTP handshake, auth, and read-only SQL rejection passed.');
 } finally {if(client)await client.close().catch(()=>{});if(child)child.kill();await new Promise(resolve=>rock.close(resolve));fs.rmSync(scratch,{recursive:true,force:true});}

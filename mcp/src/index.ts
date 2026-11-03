@@ -17,6 +17,7 @@ import { timingSafeEqual, randomUUID } from 'node:crypto';
 
 import { createRockClient, RockClient } from './rock-client.js';
 import { logToolCall } from './logger.js';
+import { buildGuideSchema, getBuildGuide } from './tools/guides.js';
 import { BUILD_SHA, BUILD_BRANCH, BUILD_DIRTY, BUILD_TIME } from './generated/build-info.js';
 
 // Import tool schemas and handlers
@@ -257,6 +258,7 @@ import { checkBundleGate } from './safety/index.js';
 
 // All tool schemas
 const ALL_TOOLS = [
+  buildGuideSchema,
   // People (read + write)
   searchPeopleSchema,
   getPersonSchema,
@@ -344,7 +346,7 @@ const ALL_TOOLS = [
  */
 // Server-level guidance handed to the MCP client (Claude). Encodes the team's write policy
 // so it travels with the server rather than relying on per-session discovery.
-const SERVER_INSTRUCTIONS = `Rock RMS write policy — read before any write.
+const SERVER_INSTRUCTIONS = `Rock RMS tools for ChatGPT Chat, Work and local agents. Call get_build_guide (topic start or build) for instructions; it works without local file access. Read the following policy before any write.
 
 This server can BUILD Rock objects (pages, blocks, attributes, workflows, auths) and edit data. Writes follow ONE rule: create = light, edit/delete = stop.
 
@@ -362,7 +364,7 @@ function createMcpServer(rockClient: RockClient): Server {
   const server = new Server(
     {
       name: 'rock-rms-mcp-server-v2',
-      version: '2.1.0',
+      version: '2.2.0',
     },
     {
       capabilities: {
@@ -438,6 +440,10 @@ function wireHandlers(server: Server, rockClient: RockClient): void {
 
           case 'execute_sql':
             result = await executeSql(rockClient, args as unknown as ExecuteSqlParams);
+            break;
+
+          case 'get_build_guide':
+            result = await getBuildGuide(args as {topic?:string});
             break;
 
           case 'get_schema':
