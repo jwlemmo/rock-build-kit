@@ -1,10 +1,11 @@
-import {loadTarget} from '../../scripts/env.mjs';
 #!/usr/bin/env node
+import {loadTarget} from '../../scripts/env.mjs';
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const SCRIPT_DIR = path.dirname(new URL(import.meta.url).pathname);
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 function fail(msg, code = 1) { console.error(`✗ ${msg}`); process.exit(code); }
 

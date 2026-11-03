@@ -2,7 +2,7 @@ import {spawnSync} from 'node:child_process';import fs from 'node:fs';import pat
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'rock-offline-'));
 try {
- const files=fs.readdirSync(path.join(root,'test')).filter(x=>/^verify-.*\.mjs$/.test(x)).concat('portable.mjs');
+ const files=fs.readdirSync(path.join(root,'test')).filter(x=>/^verify-.*\.mjs$/.test(x)).concat('portable.mjs', 'syntax.mjs');
  let failed=0;
  for(const file of files){
   const env={...process.env,ROCK_LOGS_DIR:dir,ROCK_MCP_LOG:'off'};
