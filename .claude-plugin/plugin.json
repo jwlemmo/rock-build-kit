@@ -1,0 +1,6 @@
+{
+  "name": "rock-build-kit",
+  "version": "1.0.0",
+  "description": "Portable Rock RMS building, querying, browser setup, and guarded change tools",
+  "skills": "./skills/"
+}

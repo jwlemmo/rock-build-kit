@@ -1,0 +1,36 @@
+services:
+  mcp:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    environment:
+      ROCK_API_URL: ${ROCK_API_URL:?Set ROCK_API_URL}
+      ROCK_API_KEY: ${ROCK_API_KEY:?Set ROCK_API_KEY}
+      ROCK_OPERATOR_EMAIL: ${ROCK_OPERATOR_EMAIL:?Set ROCK_OPERATOR_EMAIL}
+      ROCK_OPERATOR_NAME: ${ROCK_OPERATOR_NAME:?Set ROCK_OPERATOR_NAME}
+      MCP_BEARER_TOKEN: ${MCP_BEARER_TOKEN:?Set MCP_BEARER_TOKEN}
+      TRANSPORT: http
+      PORT: 8080
+      ROCK_LOGS_DIR: /app/logs
+      ROCK_MCP_LOG_FILE: /app/logs/usage.jsonl
+    volumes:
+      - rock_logs:/app/logs
+  proxy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      MCP_DOMAIN: ${MCP_DOMAIN:?Set MCP_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - mcp
+volumes:
+  rock_logs:
+  caddy_data:
+  caddy_config:

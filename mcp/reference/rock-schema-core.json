@@ -1,0 +1,4776 @@
+{
+  "Rock.Model.Person": {
+    "required": [
+      "isSystem",
+      "gender"
+    ],
+    "type": "object",
+    "properties": {
+      "isSystem": {
+        "type": "boolean"
+      },
+      "recordTypeValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "recordStatusValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "recordStatusLastModifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "recordStatusReasonValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "connectionStatusValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "reviewReasonValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "isDeceased": {
+        "type": "boolean"
+      },
+      "titleValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "firstName": {
+        "type": "string"
+      },
+      "nickName": {
+        "type": "string"
+      },
+      "middleName": {
+        "type": "string"
+      },
+      "lastName": {
+        "type": "string"
+      },
+      "suffixValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "photoId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "birthDay": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "birthMonth": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "birthYear": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "age": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "gender": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer"
+      },
+      "maritalStatusValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "anniversaryDate": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "graduationYear": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "givingId": {
+        "type": "string"
+      },
+      "givingLeaderId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "email": {
+        "pattern": "\\s*(?:[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\\.)+[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[A-Za-z0-9-]*[A-Za-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])\\s*",
+        "type": "string"
+      },
+      "isEmailActive": {
+        "type": "boolean"
+      },
+      "emailNote": {
+        "type": "string"
+      },
+      "emailPreference": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer"
+      },
+      "communicationPreference": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer"
+      },
+      "reviewReasonNote": {
+        "type": "string"
+      },
+      "inactiveReasonNote": {
+        "type": "string"
+      },
+      "systemNote": {
+        "type": "string"
+      },
+      "viewedCount": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "topSignalColor": {
+        "type": "string"
+      },
+      "topSignalIconCssClass": {
+        "type": "string"
+      },
+      "topSignalId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "ageClassification": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer"
+      },
+      "primaryFamilyId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "primaryCampusId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "isLockedAsChild": {
+        "type": "boolean"
+      },
+      "deceasedDate": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "contributionFinancialAccountId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "accountProtectionProfile": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer"
+      },
+      "preferredLanguageValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "reminderCount": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "raceValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "ethnicityValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "birthDateKey": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "ageBracket": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "type": "integer"
+      },
+      "firstNamePronunciationOverride": {
+        "type": "string"
+      },
+      "nickNamePronunciationOverride": {
+        "type": "string"
+      },
+      "lastNamePronunciationOverride": {
+        "type": "string"
+      },
+      "pronunciationNote": {
+        "type": "string"
+      },
+      "primaryAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "primaryAliasGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "isChatProfilePublic": {
+        "type": "boolean"
+      },
+      "isChatOpenDirectMessageAllowed": {
+        "type": "boolean"
+      },
+      "daysUntilBirthday": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "givingGroupId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "fullName": {
+        "type": "string"
+      },
+      "initials": {
+        "type": "string"
+      },
+      "birthdayDayOfWeek": {
+        "type": "string"
+      },
+      "birthdayDayOfWeekShort": {
+        "type": "string"
+      },
+      "birthDate": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "nextBirthDay": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "daysToBirthdayOrNull": {
+        "format": "int32",
+        "type": "integer",
+        "readOnly": true
+      },
+      "daysToAnniversaryOrNull": {
+        "format": "int32",
+        "type": "integer",
+        "readOnly": true
+      },
+      "nextAnniversary": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "daysUntilAnniversary": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "gradeOffset": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "hasGraduated": {
+        "type": "boolean"
+      },
+      "gradeFormatted": {
+        "type": "string"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.PersonAlias": {
+    "required": [
+      "personId"
+    ],
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "personId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "aliasedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "lastVisitDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "internalMessage": {
+        "type": "string"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.PhoneNumber": {
+    "required": [
+      "fullNumber",
+      "isSystem",
+      "personId",
+      "number",
+      "isMessagingEnabled"
+    ],
+    "type": "object",
+    "properties": {
+      "fullNumber": {
+        "type": "string"
+      },
+      "numberFormattedWithCountryCode": {
+        "type": "string"
+      },
+      "isSystem": {
+        "type": "boolean"
+      },
+      "personId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "countryCode": {
+        "type": "string"
+      },
+      "number": {
+        "type": "string"
+      },
+      "numberFormatted": {
+        "type": "string"
+      },
+      "extension": {
+        "type": "string"
+      },
+      "numberTypeValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "isMessagingEnabled": {
+        "type": "boolean"
+      },
+      "isUnlisted": {
+        "type": "boolean"
+      },
+      "description": {
+        "type": "string"
+      },
+      "isMessagingOptedOut": {
+        "type": "boolean"
+      },
+      "messagingOptedOutDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.Group": {
+    "required": [
+      "isSystem",
+      "groupTypeId",
+      "name",
+      "isSecurityRole",
+      "isActive",
+      "order",
+      "isPublic"
+    ],
+    "type": "object",
+    "properties": {
+      "isSystem": {
+        "type": "boolean"
+      },
+      "parentGroupId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "groupTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "campusId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "scheduleId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "isSecurityRole": {
+        "type": "boolean"
+      },
+      "elevatedSecurityLevel": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer"
+      },
+      "isActive": {
+        "type": "boolean"
+      },
+      "order": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "allowGuests": {
+        "type": "boolean"
+      },
+      "isPublic": {
+        "type": "boolean"
+      },
+      "groupCapacity": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "requiredSignatureDocumentTemplateId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "inactiveDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "isArchived": {
+        "type": "boolean"
+      },
+      "archivedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "archivedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "statusValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "schedulingMustMeetRequirements": {
+        "type": "boolean"
+      },
+      "attendanceRecordRequiredForCheckIn": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer"
+      },
+      "scheduleCoordinatorPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "scheduleCoordinatorNotificationTypes": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          4
+        ],
+        "type": "integer"
+      },
+      "groupAdministratorPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "inactiveReasonValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "inactiveReasonNote": {
+        "type": "string"
+      },
+      "rsvpReminderSystemCommunicationId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "rsvpReminderOffsetDays": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "disableScheduleToolboxAccess": {
+        "type": "boolean"
+      },
+      "disableScheduling": {
+        "type": "boolean"
+      },
+      "groupSalutation": {
+        "type": "string"
+      },
+      "groupSalutationFull": {
+        "type": "string"
+      },
+      "confirmationAdditionalDetails": {
+        "type": "string"
+      },
+      "reminderSystemCommunicationId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "reminderOffsetDays": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "reminderAdditionalDetails": {
+        "type": "string"
+      },
+      "scheduleConfirmationLogic": {
+        "format": "int32",
+        "enum": [
+          0,
+          1
+        ],
+        "type": "integer"
+      },
+      "relationshipGrowthEnabledOverride": {
+        "type": "boolean"
+      },
+      "relationshipStrengthOverride": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "leaderToLeaderRelationshipMultiplierOverride": {
+        "format": "double",
+        "type": "number"
+      },
+      "leaderToNonLeaderRelationshipMultiplierOverride": {
+        "format": "double",
+        "type": "number"
+      },
+      "nonLeaderToNonLeaderRelationshipMultiplierOverride": {
+        "format": "double",
+        "type": "number"
+      },
+      "nonLeaderToLeaderRelationshipMultiplierOverride": {
+        "format": "double",
+        "type": "number"
+      },
+      "isSpecialNeeds": {
+        "type": "boolean"
+      },
+      "isChatEnabledOverride": {
+        "type": "boolean"
+      },
+      "isLeavingChatChannelAllowedOverride": {
+        "type": "boolean"
+      },
+      "isChatChannelPublicOverride": {
+        "type": "boolean"
+      },
+      "isChatChannelAlwaysShownOverride": {
+        "type": "boolean"
+      },
+      "chatChannelKey": {
+        "type": "string"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.GroupMember": {
+    "required": [
+      "isSystem",
+      "groupId",
+      "groupTypeId",
+      "personId",
+      "groupRoleId",
+      "groupMemberStatus"
+    ],
+    "type": "object",
+    "properties": {
+      "isSystem": {
+        "type": "boolean"
+      },
+      "groupId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "groupTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "personId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "groupRoleId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "note": {
+        "type": "string"
+      },
+      "groupMemberStatus": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer"
+      },
+      "guestCount": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "dateTimeAdded": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "isNotified": {
+        "type": "boolean"
+      },
+      "groupOrder": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "inactiveDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "isArchived": {
+        "type": "boolean"
+      },
+      "archivedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "archivedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "scheduleTemplateId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "scheduleStartDate": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "scheduleReminderEmailOffsetDays": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "communicationPreference": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer"
+      },
+      "isChatMuted": {
+        "type": "boolean"
+      },
+      "isChatBanned": {
+        "type": "boolean"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.GroupType": {
+    "required": [
+      "isSystem",
+      "name",
+      "groupTerm",
+      "groupMemberTerm",
+      "order",
+      "isCapacityRequired",
+      "showAdministrator"
+    ],
+    "type": "object",
+    "properties": {
+      "isSystem": {
+        "type": "boolean"
+      },
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "groupTerm": {
+        "type": "string"
+      },
+      "groupMemberTerm": {
+        "type": "string"
+      },
+      "defaultGroupRoleId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "allowMultipleLocations": {
+        "type": "boolean"
+      },
+      "showInGroupList": {
+        "type": "boolean"
+      },
+      "showInNavigation": {
+        "type": "boolean"
+      },
+      "iconCssClass": {
+        "type": "string"
+      },
+      "takesAttendance": {
+        "type": "boolean"
+      },
+      "attendanceCountsAsWeekendService": {
+        "type": "boolean"
+      },
+      "sendAttendanceReminder": {
+        "type": "boolean"
+      },
+      "showConnectionStatus": {
+        "type": "boolean"
+      },
+      "showMaritalStatus": {
+        "type": "boolean"
+      },
+      "attendanceRule": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          2
+        ],
+        "type": "integer"
+      },
+      "alreadyEnrolledMatchingLogic": {
+        "format": "int32",
+        "enum": [
+          0,
+          1
+        ],
+        "type": "integer"
+      },
+      "groupCapacityRule": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer"
+      },
+      "attendancePrintTo": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer"
+      },
+      "order": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "inheritedGroupTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "allowedScheduleTypes": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          4
+        ],
+        "type": "integer"
+      },
+      "locationSelectionMode": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          4,
+          8,
+          16,
+          31
+        ],
+        "type": "integer"
+      },
+      "enableLocationSchedules": {
+        "type": "boolean"
+      },
+      "groupTypePurposeValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "ignorePersonInactivated": {
+        "type": "boolean"
+      },
+      "isIndexEnabled": {
+        "type": "boolean"
+      },
+      "groupsRequireCampus": {
+        "type": "boolean"
+      },
+      "groupAttendanceRequiresLocation": {
+        "type": "boolean"
+      },
+      "groupAttendanceRequiresSchedule": {
+        "type": "boolean"
+      },
+      "groupViewLavaTemplate": {
+        "type": "string"
+      },
+      "allowSpecificGroupMemberAttributes": {
+        "type": "boolean"
+      },
+      "enableSpecificGroupRequirements": {
+        "type": "boolean"
+      },
+      "allowGroupSync": {
+        "type": "boolean"
+      },
+      "allowSpecificGroupMemberWorkflows": {
+        "type": "boolean"
+      },
+      "enableGroupHistory": {
+        "type": "boolean"
+      },
+      "enableGroupTag": {
+        "type": "boolean"
+      },
+      "groupTypeColor": {
+        "type": "string"
+      },
+      "groupStatusDefinedTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "enableRSVP": {
+        "type": "boolean"
+      },
+      "enableInactiveReason": {
+        "type": "boolean"
+      },
+      "requiresInactiveReason": {
+        "type": "boolean"
+      },
+      "allowAnyChildGroupType": {
+        "type": "boolean"
+      },
+      "isCapacityRequired": {
+        "type": "boolean"
+      },
+      "scheduleConfirmationLogic": {
+        "format": "int32",
+        "enum": [
+          0,
+          1
+        ],
+        "type": "integer"
+      },
+      "attendanceReminderSystemCommunicationId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "attendanceReminderSendStartOffsetMinutes": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "attendanceReminderFollowupDays": {
+        "type": "string"
+      },
+      "isPeerNetworkEnabled": {
+        "type": "boolean"
+      },
+      "relationshipGrowthEnabled": {
+        "type": "boolean"
+      },
+      "relationshipStrength": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "leaderToLeaderRelationshipMultiplier": {
+        "format": "double",
+        "type": "number"
+      },
+      "leaderToNonLeaderRelationshipMultiplier": {
+        "format": "double",
+        "type": "number"
+      },
+      "nonLeaderToNonLeaderRelationshipMultiplier": {
+        "format": "double",
+        "type": "number"
+      },
+      "nonLeaderToLeaderRelationshipMultiplier": {
+        "format": "double",
+        "type": "number"
+      },
+      "isConcurrentCheckInPrevented": {
+        "type": "boolean"
+      },
+      "isChatAllowed": {
+        "type": "boolean"
+      },
+      "isChatEnabledForAllGroups": {
+        "type": "boolean"
+      },
+      "isLeavingChatChannelAllowed": {
+        "type": "boolean"
+      },
+      "isChatChannelPublic": {
+        "type": "boolean"
+      },
+      "isChatChannelAlwaysShown": {
+        "type": "boolean"
+      },
+      "isSchedulingEnabled": {
+        "type": "boolean"
+      },
+      "scheduleConfirmationSystemCommunicationId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "scheduleReminderSystemCommunicationId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "rsvpReminderSystemCommunicationId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "rsvpReminderOffsetDays": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "scheduleCancellationWorkflowTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "scheduleConfirmationEmailOffsetDays": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "scheduleReminderEmailOffsetDays": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "requiresReasonIfDeclineSchedule": {
+        "type": "boolean"
+      },
+      "administratorTerm": {
+        "type": "string"
+      },
+      "showAdministrator": {
+        "type": "boolean"
+      },
+      "scheduleCoordinatorNotificationTypes": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          4
+        ],
+        "type": "integer"
+      },
+      "locationTypes": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Rock.Model.GroupTypeLocationType"
+        }
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.GroupLocation": {
+    "required": [
+      "order"
+    ],
+    "type": "object",
+    "properties": {
+      "groupId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "locationId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "groupLocationTypeValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "isMailingLocation": {
+        "type": "boolean"
+      },
+      "isMappedLocation": {
+        "type": "boolean"
+      },
+      "isOverflowLocation": {
+        "type": "boolean"
+      },
+      "groupMemberPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "order": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "groupLocationScheduleConfigs": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Rock.Model.GroupLocationScheduleConfig"
+        }
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.Attribute": {
+    "required": [
+      "isSystem",
+      "fieldTypeId",
+      "key",
+      "name",
+      "order",
+      "isGridColumn",
+      "isMultiValue",
+      "isRequired",
+      "allowSearch"
+    ],
+    "type": "object",
+    "properties": {
+      "abbreviatedName": {
+        "type": "string"
+      },
+      "isSystem": {
+        "type": "boolean"
+      },
+      "fieldTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "entityTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "entityTypeQualifierColumn": {
+        "type": "string"
+      },
+      "entityTypeQualifierValue": {
+        "type": "string"
+      },
+      "key": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "order": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "isGridColumn": {
+        "type": "boolean"
+      },
+      "defaultValue": {
+        "type": "string"
+      },
+      "defaultValueChecksum": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "defaultPersistedTextValue": {
+        "type": "string"
+      },
+      "defaultPersistedHtmlValue": {
+        "type": "string"
+      },
+      "defaultPersistedCondensedTextValue": {
+        "type": "string"
+      },
+      "defaultPersistedCondensedHtmlValue": {
+        "type": "string"
+      },
+      "isDefaultPersistedValueDirty": {
+        "type": "boolean"
+      },
+      "isMultiValue": {
+        "type": "boolean"
+      },
+      "isRequired": {
+        "type": "boolean"
+      },
+      "iconCssClass": {
+        "type": "string"
+      },
+      "attributeColor": {
+        "type": "string"
+      },
+      "allowSearch": {
+        "type": "boolean"
+      },
+      "isIndexEnabled": {
+        "type": "boolean"
+      },
+      "isAnalytic": {
+        "type": "boolean"
+      },
+      "isAnalyticHistory": {
+        "type": "boolean"
+      },
+      "isActive": {
+        "type": "boolean"
+      },
+      "enableHistory": {
+        "type": "boolean"
+      },
+      "preHtml": {
+        "type": "string"
+      },
+      "postHtml": {
+        "type": "string"
+      },
+      "isPublic": {
+        "type": "boolean"
+      },
+      "showOnBulk": {
+        "type": "boolean"
+      },
+      "isSuppressHistoryLogging": {
+        "type": "boolean"
+      },
+      "additionalSettingsJson": {
+        "type": "string"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.Metric": {
+    "required": [
+      "isSystem",
+      "title"
+    ],
+    "type": "object",
+    "properties": {
+      "isSystem": {
+        "type": "boolean"
+      },
+      "title": {
+        "type": "string"
+      },
+      "subtitle": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "iconCssClass": {
+        "type": "string"
+      },
+      "isCumulative": {
+        "type": "boolean"
+      },
+      "sourceValueTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "sourceSql": {
+        "type": "string"
+      },
+      "sourceLava": {
+        "type": "string"
+      },
+      "dataViewId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "xAxisLabel": {
+        "type": "string"
+      },
+      "yAxisLabel": {
+        "type": "string"
+      },
+      "metricChampionPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "adminPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "scheduleId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "lastRunDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "enableAnalytics": {
+        "type": "boolean"
+      },
+      "autoPartitionOnPrimaryCampus": {
+        "type": "boolean"
+      },
+      "unitType": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer"
+      },
+      "measurementClassificationValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.MetricValue": {
+    "required": [
+      "metricId"
+    ],
+    "type": "object",
+    "properties": {
+      "metricValuePartitionEntityIds": {
+        "type": "string",
+        "readOnly": true
+      },
+      "dateTimeStamp": {
+        "format": "int64",
+        "type": "integer",
+        "readOnly": true
+      },
+      "metricValueType": {
+        "format": "int32",
+        "enum": [
+          0,
+          1
+        ],
+        "type": "integer"
+      },
+      "xValue": {
+        "type": "string"
+      },
+      "yValue": {
+        "format": "double",
+        "type": "number"
+      },
+      "metricId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "note": {
+        "type": "string"
+      },
+      "metricValueDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "metricValueDateKey": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "metricValueSourceDate": {
+        "$ref": "#/definitions/Rock.Model.AnalyticsSourceDate"
+      },
+      "seriesName": {
+        "type": "string",
+        "readOnly": true
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.MetricPartition": {
+    "required": [
+      "metricId",
+      "order"
+    ],
+    "type": "object",
+    "properties": {
+      "metricId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "label": {
+        "type": "string"
+      },
+      "entityTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "isRequired": {
+        "type": "boolean"
+      },
+      "order": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "entityTypeQualifierColumn": {
+        "type": "string"
+      },
+      "entityTypeQualifierValue": {
+        "type": "string"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.MetricValuePartition": {
+    "type": "object",
+    "properties": {
+      "metricPartitionId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "metricValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "entityId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.MetricCategory": {
+    "type": "object",
+    "properties": {
+      "metricId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "categoryId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "order": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.Workflow": {
+    "required": [
+      "name",
+      "status"
+    ],
+    "type": "object",
+    "properties": {
+      "isActive": {
+        "type": "boolean"
+      },
+      "isPersisted": {
+        "type": "boolean"
+      },
+      "workflowTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "workflowIdNumber": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "workflowId": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      },
+      "isProcessing": {
+        "type": "boolean"
+      },
+      "activatedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "lastProcessedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "completedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "initiatorPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "entityId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "entityTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "campusId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.WorkflowType": {
+    "required": [
+      "name",
+      "order",
+      "workTerm"
+    ],
+    "type": "object",
+    "properties": {
+      "isSystem": {
+        "type": "boolean"
+      },
+      "isActive": {
+        "type": "boolean"
+      },
+      "workflowIdPrefix": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "categoryId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "order": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "workTerm": {
+        "type": "string"
+      },
+      "processingIntervalSeconds": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "isPersisted": {
+        "type": "boolean"
+      },
+      "summaryViewText": {
+        "type": "string"
+      },
+      "noActionMessage": {
+        "type": "string"
+      },
+      "logRetentionPeriod": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "completedWorkflowRetentionPeriod": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "loggingLevel": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer"
+      },
+      "iconCssClass": {
+        "type": "string"
+      },
+      "maxWorkflowAgeDays": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "formBuilderTemplateId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "isFormBuilder": {
+        "type": "boolean"
+      },
+      "formBuilderSettingsJson": {
+        "type": "string"
+      },
+      "formStartDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "formEndDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "workflowExpireDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "isLoginRequired": {
+        "type": "boolean"
+      },
+      "slug": {
+        "type": "string"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.WorkflowActivity": {
+    "type": "object",
+    "properties": {
+      "isActive": {
+        "type": "boolean"
+      },
+      "workflowId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "activityTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "assignedPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "assignedGroupId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "activatedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "activatedByActivityId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "lastProcessedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "completedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.WorkflowActivityType": {
+    "required": [
+      "name",
+      "order"
+    ],
+    "type": "object",
+    "properties": {
+      "isActive": {
+        "type": "boolean"
+      },
+      "workflowTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "isActivatedWithWorkflow": {
+        "type": "boolean"
+      },
+      "order": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.WorkflowAction": {
+    "type": "object",
+    "properties": {
+      "isActive": {
+        "type": "boolean"
+      },
+      "activityId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "actionTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "lastProcessedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "completedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "formAction": {
+        "type": "string"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.WorkflowActionType": {
+    "required": [
+      "name",
+      "order"
+    ],
+    "type": "object",
+    "properties": {
+      "activityTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      },
+      "order": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "entityTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "isActionCompletedOnSuccess": {
+        "type": "boolean"
+      },
+      "isActivityCompletedOnSuccess": {
+        "type": "boolean"
+      },
+      "workflowFormId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "criteriaAttributeGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "criteriaComparisonType": {
+        "format": "int32",
+        "enum": [
+          1,
+          2,
+          4,
+          8,
+          16,
+          32,
+          64,
+          128,
+          256,
+          512,
+          1024,
+          2048,
+          4096,
+          8192
+        ],
+        "type": "integer"
+      },
+      "criteriaValue": {
+        "type": "string"
+      },
+      "isActionCompletedIfCriteriaUnmet": {
+        "type": "boolean"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.Page": {
+    "required": [
+      "internalName",
+      "displayInNavWhen",
+      "menuDisplayDescription",
+      "menuDisplayIcon",
+      "menuDisplayChildPages",
+      "order",
+      "includeAdminFooter"
+    ],
+    "type": "object",
+    "properties": {
+      "internalName": {
+        "type": "string"
+      },
+      "pageTitle": {
+        "type": "string"
+      },
+      "botGuardianLevel": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          -1
+        ],
+        "type": "integer"
+      },
+      "browserTitle": {
+        "type": "string"
+      },
+      "parentPageId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "isSystem": {
+        "type": "boolean"
+      },
+      "layoutId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "siteId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "requiresEncryption": {
+        "type": "boolean"
+      },
+      "enableViewState": {
+        "type": "boolean"
+      },
+      "pageDisplayTitle": {
+        "type": "boolean"
+      },
+      "pageDisplayBreadCrumb": {
+        "type": "boolean"
+      },
+      "pageDisplayIcon": {
+        "type": "boolean"
+      },
+      "pageDisplayDescription": {
+        "type": "boolean"
+      },
+      "displayInNavWhen": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer"
+      },
+      "menuDisplayDescription": {
+        "type": "boolean"
+      },
+      "menuDisplayIcon": {
+        "type": "boolean"
+      },
+      "menuDisplayChildPages": {
+        "type": "boolean"
+      },
+      "breadCrumbDisplayName": {
+        "type": "boolean"
+      },
+      "breadCrumbDisplayIcon": {
+        "type": "boolean"
+      },
+      "order": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "description": {
+        "type": "string"
+      },
+      "keyWords": {
+        "type": "string"
+      },
+      "headerContent": {
+        "type": "string"
+      },
+      "allowIndexing": {
+        "type": "boolean"
+      },
+      "iconCssClass": {
+        "type": "string"
+      },
+      "includeAdminFooter": {
+        "type": "boolean"
+      },
+      "bodyCssClass": {
+        "type": "string"
+      },
+      "iconBinaryFileId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "additionalSettingsJson": {
+        "type": "string"
+      },
+      "medianPageLoadTimeDurationSeconds": {
+        "format": "double",
+        "type": "number"
+      },
+      "cacheControlHeaderSettings": {
+        "type": "string"
+      },
+      "rateLimitRequestPerPeriod": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "rateLimitPeriodDurationSeconds": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "isRateLimited": {
+        "type": "boolean",
+        "readOnly": true
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.PageRoute": {
+    "required": [
+      "isSystem",
+      "pageId",
+      "route"
+    ],
+    "type": "object",
+    "properties": {
+      "isSystem": {
+        "type": "boolean"
+      },
+      "pageId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "route": {
+        "type": "string"
+      },
+      "isGlobal": {
+        "type": "boolean"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.Block": {
+    "required": [
+      "isSystem",
+      "blockTypeId",
+      "zone",
+      "order",
+      "name",
+      "outputCacheDuration"
+    ],
+    "type": "object",
+    "properties": {
+      "blockLocation": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "readOnly": true
+      },
+      "isSystem": {
+        "type": "boolean"
+      },
+      "pageId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "layoutId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "siteId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "blockTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "zone": {
+        "type": "string"
+      },
+      "order": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      },
+      "cssClass": {
+        "type": "string"
+      },
+      "preHtml": {
+        "type": "string"
+      },
+      "postHtml": {
+        "type": "string"
+      },
+      "outputCacheDuration": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "additionalSettings": {
+        "type": "string"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.BlockType": {
+    "required": [
+      "isSystem",
+      "isCommon",
+      "name"
+    ],
+    "type": "object",
+    "properties": {
+      "isSystem": {
+        "type": "boolean"
+      },
+      "isCommon": {
+        "type": "boolean"
+      },
+      "name": {
+        "type": "string"
+      },
+      "category": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.HtmlContent": {
+    "required": [
+      "blockId",
+      "version",
+      "isApproved"
+    ],
+    "type": "object",
+    "properties": {
+      "blockId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "entityValue": {
+        "type": "string"
+      },
+      "version": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "content": {
+        "type": "string"
+      },
+      "isApproved": {
+        "type": "boolean"
+      },
+      "approvedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "approvedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "startDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "expireDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.Auth": {
+    "required": [
+      "entityTypeId",
+      "order",
+      "action",
+      "allowOrDeny",
+      "specialRole"
+    ],
+    "type": "object",
+    "properties": {
+      "entityTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "entityId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "order": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "action": {
+        "type": "string"
+      },
+      "allowOrDeny": {
+        "type": "string"
+      },
+      "specialRole": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer"
+      },
+      "personAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "groupId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.Attendance": {
+    "type": "object",
+    "properties": {
+      "occurrenceId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "personAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "campusId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "deviceId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "searchTypeValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "searchValue": {
+        "type": "string"
+      },
+      "checkedInByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "searchResultGroupId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "attendanceCodeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "qualifierValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "startDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "endDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "rsvp": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer"
+      },
+      "didAttend": {
+        "type": "boolean"
+      },
+      "processed": {
+        "type": "boolean"
+      },
+      "isFirstTime": {
+        "type": "boolean"
+      },
+      "note": {
+        "type": "string"
+      },
+      "scheduledToAttend": {
+        "type": "boolean"
+      },
+      "requestedToAttend": {
+        "type": "boolean"
+      },
+      "scheduleConfirmationSent": {
+        "type": "boolean"
+      },
+      "scheduleReminderSent": {
+        "type": "boolean"
+      },
+      "rsvpDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "declineReasonValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "scheduledByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "attendanceCheckInSessionId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "presentDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "presentByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "checkedOutByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "checkInStatus": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "type": "integer"
+      },
+      "sourceValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.AttendanceOccurrence": {
+    "type": "object",
+    "properties": {
+      "groupId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "rootGroupTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "locationId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "scheduleId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "occurrenceDate": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "didNotOccur": {
+        "type": "boolean"
+      },
+      "sundayDate": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "notes": {
+        "type": "string"
+      },
+      "anonymousAttendanceCount": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "acceptConfirmationMessage": {
+        "type": "string"
+      },
+      "declineConfirmationMessage": {
+        "type": "string"
+      },
+      "showDeclineReasons": {
+        "type": "boolean"
+      },
+      "declineReasonValueIds": {
+        "type": "string"
+      },
+      "stepTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      },
+      "occurrenceDateKey": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "attendanceTypeValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "attendanceReminderLastSentDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "occurrenceSourceDate": {
+        "$ref": "#/definitions/Rock.Model.AnalyticsSourceDate"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.FinancialTransaction": {
+    "type": "object",
+    "properties": {
+      "authorizedPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "showAsAnonymous": {
+        "type": "boolean"
+      },
+      "batchId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "financialGatewayId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "financialPaymentDetailId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "transactionDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "futureProcessingDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "transactionCode": {
+        "type": "string"
+      },
+      "summary": {
+        "type": "string"
+      },
+      "transactionTypeValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "sourceTypeValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "checkMicrEncrypted": {
+        "type": "string"
+      },
+      "checkMicrHash": {
+        "type": "string"
+      },
+      "micrStatus": {
+        "format": "int32",
+        "enum": [
+          0,
+          1
+        ],
+        "type": "integer"
+      },
+      "checkMicrParts": {
+        "type": "string"
+      },
+      "scheduledTransactionId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "isSettled": {
+        "type": "boolean"
+      },
+      "settledGroupId": {
+        "type": "string"
+      },
+      "settledDate": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "isReconciled": {
+        "type": "boolean"
+      },
+      "status": {
+        "type": "string"
+      },
+      "statusMessage": {
+        "type": "string"
+      },
+      "nonCashAssetTypeValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignCurrencyCodeValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "sundayDate": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "transactionDateKey": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "settledDateKey": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "transactionSourceDate": {
+        "$ref": "#/definitions/Rock.Model.AnalyticsSourceDate"
+      },
+      "settledSourceDate": {
+        "$ref": "#/definitions/Rock.Model.AnalyticsSourceDate"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.FinancialTransactionDetail": {
+    "type": "object",
+    "properties": {
+      "transactionId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "accountId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "amount": {
+        "format": "double",
+        "type": "number"
+      },
+      "summary": {
+        "type": "string"
+      },
+      "entityTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "entityId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "feeAmount": {
+        "format": "double",
+        "type": "number"
+      },
+      "feeCoverageAmount": {
+        "format": "double",
+        "type": "number"
+      },
+      "foreignCurrencyAmount": {
+        "format": "double",
+        "type": "number"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.FinancialAccount": {
+    "required": [
+      "name"
+    ],
+    "type": "object",
+    "properties": {
+      "parentAccountId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "campusId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      },
+      "publicName": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "publicDescription": {
+        "type": "string"
+      },
+      "isTaxDeductible": {
+        "type": "boolean"
+      },
+      "glCode": {
+        "type": "string"
+      },
+      "order": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "isActive": {
+        "type": "boolean"
+      },
+      "isPublic": {
+        "type": "boolean"
+      },
+      "startDate": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "endDate": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "accountTypeValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "imageBinaryFileId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "url": {
+        "type": "string"
+      },
+      "usesCampusChildAccounts": {
+        "type": "boolean"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.DefinedValue": {
+    "required": [
+      "isSystem",
+      "definedTypeId",
+      "order",
+      "value",
+      "isActive"
+    ],
+    "type": "object",
+    "properties": {
+      "isSystem": {
+        "type": "boolean"
+      },
+      "definedTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "order": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "value": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "isActive": {
+        "type": "boolean"
+      },
+      "categoryId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "categoryName": {
+        "type": "string",
+        "readOnly": true
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.DefinedType": {
+    "required": [
+      "isSystem",
+      "order",
+      "name",
+      "isActive"
+    ],
+    "type": "object",
+    "properties": {
+      "isSystem": {
+        "type": "boolean"
+      },
+      "fieldTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "order": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "categoryId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "helpText": {
+        "type": "string"
+      },
+      "isActive": {
+        "type": "boolean"
+      },
+      "enableSecurityOnValues": {
+        "type": "boolean"
+      },
+      "categorizedValuesEnabled": {
+        "type": "boolean"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.Location": {
+    "type": "object",
+    "properties": {
+      "isNamedLocation": {
+        "type": "boolean"
+      },
+      "geoFenceCoordinates": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "readOnly": true
+      },
+      "latitude": {
+        "format": "double",
+        "type": "number",
+        "readOnly": true
+      },
+      "longitude": {
+        "format": "double",
+        "type": "number",
+        "readOnly": true
+      },
+      "parentLocationId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      },
+      "isActive": {
+        "type": "boolean"
+      },
+      "locationTypeValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "geoPoint": {
+        "$ref": "#/definitions/System.Data.Entity.Spatial.DbGeography"
+      },
+      "geoFence": {
+        "$ref": "#/definitions/System.Data.Entity.Spatial.DbGeography"
+      },
+      "street1": {
+        "type": "string"
+      },
+      "street2": {
+        "type": "string"
+      },
+      "city": {
+        "type": "string"
+      },
+      "county": {
+        "type": "string"
+      },
+      "state": {
+        "type": "string"
+      },
+      "country": {
+        "type": "string"
+      },
+      "postalCode": {
+        "type": "string"
+      },
+      "barcode": {
+        "type": "string"
+      },
+      "assessorParcelId": {
+        "type": "string"
+      },
+      "standardizeAttemptedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "standardizeAttemptedServiceType": {
+        "type": "string"
+      },
+      "standardizeAttemptedResult": {
+        "type": "string"
+      },
+      "standardizedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "geocodeAttemptedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "geocodeAttemptedServiceType": {
+        "type": "string"
+      },
+      "geocodeAttemptedResult": {
+        "type": "string"
+      },
+      "geocodedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "isGeoPointLocked": {
+        "type": "boolean"
+      },
+      "printerDeviceId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "imageId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "softRoomThreshold": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "firmRoomThreshold": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "beaconId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "distance": {
+        "format": "double",
+        "type": "number",
+        "readOnly": true
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.Schedule": {
+    "required": [
+      "isActive"
+    ],
+    "type": "object",
+    "properties": {
+      "iCalendarContent": {
+        "type": "string"
+      },
+      "friendlyScheduleText": {
+        "type": "string"
+      },
+      "abbreviatedName": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "checkInStartOffsetMinutes": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "checkInEndOffsetMinutes": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "effectiveStartDate": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "effectiveEndDate": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "weeklyDayOfWeek": {
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "type": "integer"
+      },
+      "weeklyTimeOfDay": {
+        "type": "string"
+      },
+      "categoryId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "autoInactivateWhenComplete": {
+        "type": "boolean"
+      },
+      "isActive": {
+        "type": "boolean"
+      },
+      "order": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "isPublic": {
+        "type": "boolean"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.EntityType": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "assemblyName": {
+        "type": "string"
+      },
+      "friendlyName": {
+        "type": "string"
+      },
+      "isEntity": {
+        "type": "boolean"
+      },
+      "isSecured": {
+        "type": "boolean"
+      },
+      "isCommon": {
+        "type": "boolean"
+      },
+      "singleValueFieldTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "multiValueFieldTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "isIndexingEnabled": {
+        "type": "boolean"
+      },
+      "isAchievementsEnabled": {
+        "type": "boolean"
+      },
+      "isMessageBusEventPublishEnabled": {
+        "type": "boolean"
+      },
+      "attributesSupportPrePostHtml": {
+        "type": "boolean"
+      },
+      "attributesSupportShowOnBulk": {
+        "type": "boolean"
+      },
+      "isRelatedToInteractionTrackedOnCreate": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.Tag": {
+    "required": [
+      "isSystem",
+      "name",
+      "order"
+    ],
+    "type": "object",
+    "properties": {
+      "isSystem": {
+        "type": "boolean"
+      },
+      "entityTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "entityTypeQualifierColumn": {
+        "type": "string"
+      },
+      "entityTypeQualifierValue": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "order": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "ownerPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "isActive": {
+        "type": "boolean"
+      },
+      "categoryId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "iconCssClass": {
+        "type": "string"
+      },
+      "backgroundColor": {
+        "type": "string"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.TaggedItem": {
+    "required": [
+      "isSystem",
+      "tagId",
+      "entityTypeId"
+    ],
+    "type": "object",
+    "properties": {
+      "isSystem": {
+        "type": "boolean"
+      },
+      "tagId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "entityTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "entityGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "quantity": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.Campus": {
+    "required": [
+      "isSystem",
+      "name"
+    ],
+    "type": "object",
+    "properties": {
+      "isSystem": {
+        "type": "boolean"
+      },
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "isActive": {
+        "type": "boolean"
+      },
+      "shortCode": {
+        "type": "string"
+      },
+      "url": {
+        "type": "string"
+      },
+      "locationId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "phoneNumber": {
+        "type": "string"
+      },
+      "leaderPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "serviceTimes": {
+        "type": "string"
+      },
+      "order": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "timeZoneId": {
+        "type": "string"
+      },
+      "campusStatusValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "campusTypeValueId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "teamGroupId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "openedDate": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "closedDate": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "titheMetric": {
+        "format": "double",
+        "type": "number"
+      },
+      "beaconId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.Category": {
+    "required": [
+      "isSystem",
+      "entityTypeId",
+      "order",
+      "name"
+    ],
+    "type": "object",
+    "properties": {
+      "isSystem": {
+        "type": "boolean"
+      },
+      "parentCategoryId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "entityTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "entityTypeQualifierColumn": {
+        "type": "string"
+      },
+      "entityTypeQualifierValue": {
+        "type": "string"
+      },
+      "order": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "iconCssClass": {
+        "type": "string"
+      },
+      "highlightColor": {
+        "type": "string"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.Report": {
+    "required": [
+      "isSystem",
+      "name"
+    ],
+    "type": "object",
+    "properties": {
+      "isSystem": {
+        "type": "boolean"
+      },
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "categoryId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "entityTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "dataViewId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "fetchTop": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "queryHint": {
+        "type": "string"
+      },
+      "lastRunDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "runCount": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "timeToRunDurationMilliseconds": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  },
+  "Rock.Model.DataView": {
+    "required": [
+      "isSystem",
+      "name",
+      "entityTypeId"
+    ],
+    "type": "object",
+    "properties": {
+      "isSystem": {
+        "type": "boolean"
+      },
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "categoryId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "entityTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "dataViewFilterId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "transformEntityTypeId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "persistedScheduleIntervalMinutes": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "persistedLastRefreshDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "includeDeceased": {
+        "type": "boolean"
+      },
+      "persistedLastRunDurationMilliseconds": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "lastRunDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "runCount": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "timeToRunDurationMilliseconds": {
+        "format": "double",
+        "type": "number"
+      },
+      "runCountLastRefreshDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "disableUseOfReadOnlyContext": {
+        "type": "boolean"
+      },
+      "persistedScheduleId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "iconCssClass": {
+        "type": "string"
+      },
+      "highlightColor": {
+        "type": "string"
+      },
+      "createdDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "modifiedDateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "createdByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedByPersonAliasId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "modifiedAuditValuesAlreadyUpdated": {
+        "type": "boolean"
+      },
+      "id": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "idKey": {
+        "type": "string"
+      },
+      "guid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignId": {
+        "format": "int32",
+        "type": "integer"
+      },
+      "foreignGuid": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "foreignKey": {
+        "type": "string"
+      }
+    }
+  }
+}

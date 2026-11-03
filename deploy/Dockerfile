@@ -1,0 +1,17 @@
+FROM node:22-slim AS build
+WORKDIR /app
+COPY mcp/package*.json ./
+RUN npm ci
+COPY mcp/tsconfig.json ./
+COPY mcp/src ./src
+COPY mcp/scripts ./scripts
+RUN npm run build
+FROM node:22-slim
+WORKDIR /app
+ENV NODE_ENV=production TRANSPORT=http PORT=8080 ROCK_LOGS_DIR=/app/logs
+COPY mcp/package*.json ./
+RUN npm ci --omit=dev && npm cache clean --force && mkdir -p /app/logs && chown node:node /app/logs
+COPY --from=build /app/dist ./dist
+USER node
+EXPOSE 8080
+CMD ["node", "dist/index.js"]

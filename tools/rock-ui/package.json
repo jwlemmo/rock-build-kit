@@ -1,0 +1,1 @@
+{ "name": "rock-ui-cli", "private": true, "type": "module", "bin": { "rock-ui": "rock-ui.mjs" }, "dependencies": { "playwright": "1.62.1" } }

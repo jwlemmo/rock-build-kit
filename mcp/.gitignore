@@ -1,0 +1,13 @@
+node_modules/
+dist/
+logs/
+.env
+*.js.map
+*.d.ts.map
+.DS_Store
+.tmp.driveupload/
+Icon?
+.env.dev
+.env*.bak*
+test/dev-feed-mirror.json
+src/generated/

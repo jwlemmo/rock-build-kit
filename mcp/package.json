@@ -1,0 +1,31 @@
+{
+  "name": "rock-mcp-server-v2",
+  "version": "2.1.0",
+  "description": "MCP server for Rock RMS \u2014 v2-first with v1 fallbacks; guarded build writes (rock_create/edit/delete) with audit, snapshots, impact analysis",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/gen-build-info.mjs && tsc",
+    "start": "node dist/index.js",
+    "dev": "node scripts/gen-build-info.mjs && tsc --watch",
+    "test": "node test/offline.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "rock-rms",
+    "church-management"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "rrule": "^2.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
