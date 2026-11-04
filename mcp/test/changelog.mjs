@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {execFileSync} from 'node:child_process';
+import {prepareChangelog} from '../../scripts/setup-changelog.mjs';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
+const temp=fs.mkdtempSync(path.join(os.tmpdir(),'changelog-test-'));
+try {
+ const dir=path.join(temp,'path with spaces');
+ prepareChangelog(dir,'sample-church/rock-changelog');
+ assert.ok(fs.existsSync(path.join(dir,'.git')));
+ assert.equal(fs.existsSync(path.join(dir,'.env')),false);
+ assert.throws(()=>prepareChangelog(dir,'sample-church/rock-changelog'),/existing/);
+ assert.throws(()=>prepareChangelog(path.join(temp,'bad'),'--public'),/OWNER/);
+ const env={...process.env,ROCK_CHANGELOG_DIR:dir};
+ const script=path.join(root,'ops/rock-change-management/change.mjs');
+ execFileSync(process.execPath,[script,'open','test-bundle','Tracking only','operator@example.org'],{env});
+ const open=JSON.parse(fs.readFileSync(path.join(dir,'open/test-bundle.json')));
+ assert.equal(open.author,'operator@example.org');assert.equal(open.status,'open');
+ execFileSync(process.execPath,[script,'cancel','test-bundle'],{env});
+ assert.equal(fs.existsSync(path.join(dir,'open/test-bundle.json')),false);
+ assert.equal(JSON.parse(fs.readFileSync(path.join(dir,'changes/test-bundle.json'))).status,'cancelled');
+ const calls=[];
+ const run=(cmd,args)=>{calls.push([cmd,...args]);return args.includes('view')?JSON.stringify({isPrivate:true,url:'https://github.com/sample-church/rock-changelog'}):'';};
+ prepareChangelog(path.join(temp,'publish'),'sample-church/rock-changelog',{publish:true,run});
+ const create=calls.find(x=>x.includes('create'));assert.ok(create.includes('--private'));assert.ok(!create.includes('--public'));
+ assert.ok(calls.some(x=>x.includes('view')&&x.includes('isPrivate,url')));
+ assert.ok(!calls.some(x=>x.includes('add')&&x.includes('.')));
+ assert.throws(()=>prepareChangelog(path.join(temp,'privacy-fail'),'sample-church/rock-changelog',{publish:true,run:(cmd,args)=>args.includes('view')?'{"isPrivate":false}':''}),/privacy verification failed/);
+ const {getBuildGuide}=await import('../dist/tools/guides.js');
+ assert.match((await getBuildGuide({topic:'changelog'})).content,/private GitHub/);
+ console.log('Private-only publication, safe initialization, bundle lifecycle and remote guide verified without network or Rock writes.');
+} finally {fs.rmSync(temp,{recursive:true,force:true});}

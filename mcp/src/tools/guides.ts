@@ -1,4 +1,4 @@
 import {readFile} from 'node:fs/promises';
-const TOPICS=['start','build','query','access','browser','chatgpt'] as const;
+const TOPICS=['start','build','query','access','browser','chatgpt','changelog'] as const;
 export const buildGuideSchema={name:'get_build_guide',description:'Read the bundled Rock setup or construction guide before planning a build. Works in ChatGPT Chat and Work without local file access. Does not contact or change Rock.',inputSchema:{type:'object' as const,properties:{topic:{type:'string',enum:TOPICS,description:'Guide topic; start is the overview.'}},required:[]}};
 export async function getBuildGuide(params:{topic?:string}={}){const topic=params.topic??'start';if(!TOPICS.includes(topic as typeof TOPICS[number]))throw new Error('Unknown guide topic.');return {topic,content:await readFile(new URL(`../guides/${topic}.md`,import.meta.url),'utf8')};}

@@ -1,6 +1,6 @@
 {
   "name": "rock-build-kit",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Build, query, and configure Rock RMS from ChatGPT Chat, Work, Claude and Codex. Run onboarding to connect your own church.",
   "skills": "./skills/",
   "onboardingSkill": "./skills/rock-chatgpt-setup/SKILL.md",

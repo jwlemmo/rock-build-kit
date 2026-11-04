@@ -79,7 +79,11 @@ Doctor tests version, identity, v2 campus read, plain Lava, and SQL `SELECT 1`, 
 
 Then ask the client to list tools and call `list_campuses`. Confirm the reported target. Offline verification is `cd mcp && npm test`. Once you approve a test build, create a disposable page beneath a reviewed parent, verify its content and effective permissions in the browser, and use the guarded restore preview to remove it. Never test by editing a real person or gift.
 
-## 6. Web and Work connections
+## 6. Private GitHub change log
+
+Follow [CHANGELOG-SETUP.md](CHANGELOG-SETUP.md) to create your church's private repository, connect each operator and host, verify a tracking-only record, and optionally enable the sandbox bundle prerequisite. The setup helper and complete repository template are included.
+
+## 7. Web and Work connections
 
 **For ChatGPT Chat and Work use [CHATGPT-WORK.md](CHATGPT-WORK.md)**. That is the supported private-tunnel/plugin path and includes separate verification in both modes. The older hosted HTTP option below is useful for compatible clients; it does not implement OAuth for ChatGPT.
 

@@ -19,3 +19,9 @@ Not claimed: connectivity, permissions or browser rendering on the recipient's c
 The private tunnel profile, environment isolation, app-ID normalization, no-local-MCP plugin packaging, guide delivery and trusted binary download selection are covered by the added chatgpt.mjs suite. All 14 suites pass. The tunnel-client installer downloaded the current official release and verified its published SHA256. The existing local tunnel-client also passed profile validation and established healthy/ready status with the authorized account.
 
 Live read-only calls to get_build_guide and list_campuses succeeded through the installed custom plugin in a Chat conversation and a separate Work conversation on the authorized account. These are integration checks for this account, not a claim that the recipient's unconfigured church/account is already connected. No Rock data was written by the checks.
+
+## Private GitHub change log added in v1.2.0
+
+- Included first-run guide, private repository template and `scripts/setup-changelog.mjs`.
+- All 15 offline suites passed, including local Git initialization in a path with spaces, rejection of existing folders/invalid repository names, open/cancel bundle lifecycle, private-only GitHub command arguments and privacy readback failure handling with a stubbed GitHub CLI, and delivery of the guide through MCP.
+- No test repository was created on GitHub and no Rock records were changed. Actual GitHub creation occurs during the recipient's signed-in onboarding.

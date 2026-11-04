@@ -11,3 +11,5 @@ Replaced: live person-specific smoke tests and dev snapshots with offline tests 
 Upstream observations came from Rock 17–19-era installations. Not every endpoint works on every version, nor is a full v1 fallback implemented for every tool. Discover actual capabilities; do not call a missing plugin a setup failure. `reference/` documents retained observations, not guarantees about your church. Pin and review future upstream changes before importing; never copy upstream config/data blindly.
 
 Version 1.1.0 adds the private Secure MCP Tunnel workflow, real Chat/Work plugin manifests, per-church app-binding generator, and a read-only get_build_guide tool served by MCP. Church-specific tunnel IDs, app IDs and keys are generated only under ignored local paths.
+
+Version 1.2.0 adds guided per-church private GitHub change-log setup, a fresh repository template, privacy verification, and a changelog guide available through MCP. It contains no preconfigured repository owner or church credentials.

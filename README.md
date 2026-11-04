@@ -20,3 +20,5 @@ Includes the full upstream MCP server (56 tools), build/restore library, query a
 No credentials or inherited private Git history are included. Do not publish local `.env`, audit logs, backups, or discovery output. New-object tools write immediately; guarded edits/deletes/restores preview before confirmation. See [SECURITY.md](SECURITY.md).
 
 The package installs its dependencies from public registries. It is self-contained as source and setup, not an offline bundle of Node, browsers, accounts, or hosting.
+
+Private GitHub change tracking: [guided setup](CHANGELOG-SETUP.md) includes the repository template and setup helper.

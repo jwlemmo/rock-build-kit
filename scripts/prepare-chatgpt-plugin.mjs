@@ -6,7 +6,7 @@ export function prepare(value,root=ROOT){
  const id=appId(value),market=path.join(root,'local/chatgpt-marketplace'),dest=path.join(market,'plugins/rock-build-kit');
  if(fs.existsSync(dest))throw new Error('Generated plugin exists. Review/remove the generated local folder before replacing it.');
  fs.mkdirSync(dest,{recursive:true,mode:0o700});
- for(const name of ['AGENTS.md','CLAUDE.md','CHATGPT-WORK.md','START-HERE.md','SETUP.md','SECURITY.md','PORTABILITY.md']) {if(fs.existsSync(path.join(root,name)))fs.copyFileSync(path.join(root,name),path.join(dest,name));}
+ for(const name of ['AGENTS.md','CLAUDE.md','CHATGPT-WORK.md','START-HERE.md','SETUP.md','CHANGELOG-SETUP.md','SECURITY.md','PORTABILITY.md']) {if(fs.existsSync(path.join(root,name)))fs.copyFileSync(path.join(root,name),path.join(dest,name));}
  for(const dir of ['skills','reference'])fs.cpSync(path.join(root,dir),path.join(dest,dir),{recursive:true});
  fs.mkdirSync(path.join(dest,'mcp'),{recursive:true});fs.cpSync(path.join(root,'mcp/reference'),path.join(dest,'mcp/reference'),{recursive:true});
  const manifest=JSON.parse(fs.readFileSync(path.join(root,'plugin.json'),'utf8'));manifest.extensions['com.openai'].apps='./.app.json';

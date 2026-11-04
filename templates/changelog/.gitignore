@@ -1,0 +1,11 @@
+.env
+.env.*
+*.key
+*.pem
+*.p12
+local/
+logs/
+audit/
+snapshots/
+evidence/
+.DS_Store
