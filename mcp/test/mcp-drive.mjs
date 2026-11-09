@@ -22,8 +22,8 @@
  *     "timeoutMs": 60000 }
  * Args may reference resolved vars: "${var}" (whole-string refs keep the raw type).
  *
- * Safety: if any W-lane entry is scheduled, ROCK_API_URL must contain "rockdev" — the
- * write lane refuses to run against anything but the dev box. Two-phase previews are
+ * Safety: if any W-lane entry is scheduled, ROCK_API_URL's host must equal ROCK_DEV_HOST
+ * (your sandbox server) — the write lane refuses to run against anything else. Two-phase previews are
  * auto-confirmed ONLY when the entry opts in AND the preview text contains the guard
  * substring (default MCPTEST); everything else is reported and skipped.
  */
@@ -68,14 +68,17 @@ function loadEnvFile(p) {
   return out;
 }
 const fileEnv = loadEnvFile(ENV_FILE);
-const isDev = /rockdev/i.test(fileEnv.ROCK_API_URL ?? '');
+const devHost = (fileEnv.ROCK_DEV_HOST ?? process.env.ROCK_DEV_HOST ?? '').toLowerCase();
+const isDev = (() => {
+  try { return !!devHost && new URL(fileEnv.ROCK_API_URL ?? '').hostname.toLowerCase() === devHost; } catch { return false; }
+})();
 const childEnv = {
   ...process.env,
   ...fileEnv,
   ...(isDev
     ? {
-        // rockdev's cert is expired (tracked for renewal); bypass is dev-only by construction.
-        NODE_TLS_REJECT_UNAUTHORIZED: '0',
+        // Opt-in only, for a sandbox with a self-signed or expired certificate; dev-only by construction.
+        ...((fileEnv.ROCK_DEV_INSECURE_TLS ?? process.env.ROCK_DEV_INSECURE_TLS) === '1' ? { NODE_TLS_REJECT_UNAUTHORIZED: '0' } : {}),
         ROCK_LOGS_DIR: fileEnv.ROCK_LOGS_DIR ?? join(ROOT, 'logs', 'dev'),
       }
     : {}),
@@ -255,9 +258,9 @@ const manifest = JSON.parse(readFileSync(pathResolve(ROOT, MANIFEST), 'utf8'));
 let entries = manifest.filter((e) => (LANE === 'ALL' ? true : e.lane === LANE));
 if (ONLY) entries = entries.filter((e) => ONLY.includes(e.tool) || ONLY.includes(e.id));
 
-// Write-lane hard gate: never point a write lane at anything but rockdev.
+// Write-lane hard gate: never point a write lane at anything but the configured dev host.
 if (entries.some((e) => e.lane === 'W') && !isDev) {
-  console.error('REFUSING: write-lane entries scheduled but ROCK_API_URL is not rockdev.');
+  console.error('REFUSING: write-lane entries scheduled but ROCK_API_URL is not the ROCK_DEV_HOST sandbox.');
   child.kill();
   process.exit(1);
 }

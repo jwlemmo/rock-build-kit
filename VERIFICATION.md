@@ -25,3 +25,22 @@ Live read-only calls to get_build_guide and list_campuses succeeded through the 
 - Included first-run guide, private repository template and `scripts/setup-changelog.mjs`.
 - All 15 offline suites passed, including local Git initialization in a path with spaces, rejection of existing folders/invalid repository names, open/cancel bundle lifecycle, private-only GitHub command arguments and privacy readback failure handling with a stubbed GitHub CLI, and delivery of the guide through MCP.
 - No test repository was created on GitHub and no Rock records were changed. Actual GitHub creation occurs during the recipient's signed-in onboarding.
+
+## Version 1.3.0 guidance — 2026-11-08
+
+Documentation and skill changes (skills, reference, ops, config examples), plus the MCP-served guides re-synced from the updated skills. Results from 2026-11-08:
+
+- `cd mcp && npm run build` completed cleanly.
+- `cd mcp && npm test` passed 16 of 16 suites. That run now includes `test/offline/run-all.mjs` (9 of 9 files passed when also run on its own).
+- An earlier run the same day exited 1 at 14 of 15 suites. The failing suite was `test/verify-mining-batch.mjs`, not `verify-fixes.mjs`: its two verify-step checks called `rockCreate` with a stub that had no schema, so the new SQL preflight refused first ('Table AttributeValue was not found in the database'). The test was out of date with the preflight, not a regression in the verify messages; its stub now answers the preflight's schema query and both checks pass.
+- `mcp/guides/build.md`, `query.md` and `access.md` are byte copies of `skills/rock-build`, `skills/rock-query` and `skills/rock-grant-access`, so `get_build_guide` serves the 1.3.0 guidance. No guide or shipped document names a dev host or a private memory.
+- `node scripts/package.mjs --check` passed (193 tracked files after staging the new MCP and test files; release paths and secret patterns clean).
+- The 19.8 REST, Lava/text, nested-record (#7144) and WorkflowActionType (#6954) field notes are tagged `traced` only: they come from release notes and issue trackers and were not tested live.
+- No Rock server was contacted for these changes.
+
+## Version 1.3.0 MCP write safety — 2026-11-08
+
+- Every write tool requires a `reason`; older data tools preview before update/remove and ledger creates for `rock_restore`; 25-row bulk cap with `allowBulk`; refusals ledgered; read-back `verified` on every write; `flush_cache` ledgered.
+- `mode:"sql"` preflight and Auth lockout guard. Time stamps use `ROCK_TIMEZONE` (a Windows time-zone id); with it unset, `GETDATE()` is refused with instructions and no time columns are added. Nothing assumes a particular zone.
+- Offline coverage: 9 new suites under `mcp/test/offline/` (two-phase, bulk cap, bundle gate, creates and restore, schemas, SQL preflight, SQL row guard, Auth guard, security-role restore), all passing inside `npm test`.
+- The upstream installation live-tested the same safety layer against its own development Rock 19.8.1 server on 2026-11-08; that test is not a claim about your church's server. Run your own dev checks per SETUP.md.

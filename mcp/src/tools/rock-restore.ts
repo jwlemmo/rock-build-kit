@@ -28,6 +28,10 @@
  *   f. SQL create with newId+table    → undo-create SQL: DELETE FROM [table] WHERE Id = newId
  *   g. SQL edit/delete executed       → refuse (v1 scope cut — see below)
  *   h. anything else (flush_cache…)   → refuse
+ *   i. record.undo.supported === false → refuse with the record's own reason (launch_workflow)
+ *   j. record.undo.kind 'attribute-value' → set the Person attribute back (set_person_attribute)
+ *   k. delete whose payload.action is 'archived' → PATCH the archive fields back from the
+ *      snapshot (remove_group_member when Rock archived instead of deleting)
  *
  * Scope cuts (v1), called out here and in the tool description so they're not mistaken for
  * bugs:
@@ -60,10 +64,19 @@ import {
   findLedgerRecord,
   laterWritesToTarget,
   loadSnapshot,
+  WriteRefused,
+  logDenial,
+  readBack,
+  REASON_PARAM,
   type WriteOp,
   type ImpactTarget,
   type AuditRecord,
 } from '../safety/index.js';
+import { fieldsMatch } from './legacy-helpers.js';
+import { rockNowSql } from '../safety/sqlPreflight.js';
+
+/** Stock Rock Guid of the "Security Role" group type (the same on every Rock install). */
+const SECURITY_ROLE_GROUP_TYPE_GUID = 'AECE949F-704C-483E-A4FB-93D5E4720C4C';
 
 // ---------------------------------------------------------------- helpers (mirrors rock-write.ts)
 
@@ -205,7 +218,8 @@ export type RestorePlan =
       guid?: string;
       droppedNav: string[];
     }
-  | { kind: 'sql-refuse'; entityType: string; table?: string; snapshotRef?: string; snapshot: unknown };
+  | { kind: 'sql-refuse'; entityType: string; table?: string; snapshotRef?: string; snapshot: unknown }
+  | { kind: 'attribute-set'; personId: number; key: string; value: string };
 
 /**
  * Classify a ledger record's restore plan. Pure with respect to network — the only async
@@ -218,6 +232,19 @@ export async function classifyRestore(effective: AuditRecord): Promise<RestorePl
   // case a — only a preview was ever ledgered; nothing executed, nothing to undo.
   if (effective.phase === 'preview') {
     return { kind: 'refuse', reason: 'Only a preview was ledgered for this auditId — nothing was ever executed, so there is nothing to restore.' };
+  }
+
+  // case i — the writing tool recorded that its write cannot be undone, and why.
+  if (effective.undo && effective.undo.supported === false) {
+    return { kind: 'refuse', reason: `rock_restore cannot undo ${tool}: ${effective.undo.why}` };
+  }
+  // case j — set_person_attribute: set the attribute back to the value it had before.
+  if (effective.undo && effective.undo.supported && effective.undo.kind === 'attribute-value') {
+    const u = effective.undo;
+    if (typeof u.personId !== 'number' || typeof u.key !== 'string') {
+      return { kind: 'refuse', reason: 'This attribute record is missing personId/key in its undo details — restore manually with set_person_attribute.' };
+    }
+    return { kind: 'attribute-set', personId: u.personId, key: u.key, value: u.value ?? '' };
   }
 
   // case h — tools with no restore story (flush_cache, launch_workflow, etc. never reach
@@ -325,10 +352,23 @@ export async function classifyRestore(effective: AuditRecord): Promise<RestorePl
     return { kind: 'refuse', reason: 'This delete record has no target.id — cannot identify the row to restore.' };
   }
   const controller = controllerFromEntityType(target.entityType);
-  const p = payload as { action?: 'deactivated' | 'deleted'; hard?: boolean } | undefined;
+  const p = payload as { action?: 'deactivated' | 'deleted' | 'archived'; hard?: boolean } | undefined;
   if (p?.action === 'deactivated') {
     // case d
     return { kind: 'reactivate', controller, id: target.id, entityType: target.entityType };
+  }
+  if (p?.action === 'archived') {
+    // case k — Rock archived the row instead of deleting it: put the archive fields back.
+    const snap = await loadSnapshot(effective.snapshotRef);
+    if (snap.data === null || typeof snap.data !== 'object') {
+      return { kind: 'refuse', reason: `Could not load the before-snapshot for this archive (${snap.reason ?? 'unknown'}) — cannot un-archive.` };
+    }
+    const before = snap.data as Record<string, unknown>;
+    const body: Record<string, unknown> = { IsArchived: before.IsArchived ?? false };
+    for (const k of ['ArchivedDateTime', 'ArchivedByPersonAliasId']) {
+      if (Object.prototype.hasOwnProperty.call(before, k)) body[k] = before[k];
+    }
+    return { kind: 'patch-back', controller, id: target.id, entityType: target.entityType, body, warnings: [] };
   }
   // case e — hard delete: recreate from the snapshot.
   const snap = await loadSnapshot(effective.snapshotRef);
@@ -367,6 +407,8 @@ function describePlan(plan: RestorePlan): { restorable: boolean; restore_action?
       return { restorable: true, restore_action: `PATCH ${plan.controller}/${plan.id} with {"IsActive":true} (reactivate).` };
     case 'recreate':
       return { restorable: true, restore_action: `Re-POST a cleaned copy of the before-snapshot to ${plan.controller} (recreate the deleted row; new Id, same Guid).` };
+    case 'attribute-set':
+      return { restorable: true, restore_action: `Set Person ${plan.personId} attribute ${plan.key} back to ${JSON.stringify(plan.value)}.` };
   }
 }
 
@@ -379,6 +421,7 @@ export interface RockRestoreParams {
   force?: boolean;
   label?: string;
   session_tag?: string;
+  reason?: string;
 }
 
 export const rockRestoreSchema = {
@@ -400,7 +443,10 @@ export const rockRestoreSchema = {
     'restore target, you get phase:"noop" instead of a token (nothing to do). ' +
     'Scope cuts (v1): SQL-mode edit/delete restore is refused (snapshot is returned for manual restore via ' +
     'rock_edit/rock_create); manifest.json is never modified; no automatic cache flush (the response names ' +
-    'flush_cache when the target is cache-sensitive); recreated rows are not relinked by their old numeric Id.',
+    'flush_cache when the target is cache-sensitive); recreated rows are not relinked by their old numeric Id. ' +
+    'Also undoes the older data-write tools (update_person, add_group_member, remove_person_tag, ' +
+    'set_person_attribute, ...); launch_workflow is refused because its actions have already run. ' +
+    'reason is required whenever audit_id is given. The execute result says verified:true/false from a re-read.',
   inputSchema: {
     type: 'object' as const,
     properties: {
@@ -415,6 +461,7 @@ export const rockRestoreSchema = {
           'Optional: your Claude session id, recorded on the audit ledger entry alongside the ' +
           'operator\'s git identity, so "did my session touch prod?" is answerable later.',
       },
+      reason: { ...REASON_PARAM, description: 'Required when audit_id is given (not for list mode): ' + REASON_PARAM.description },
     },
   },
 };
@@ -531,9 +578,16 @@ export async function rockRestore(client: RockClient, params: RockRestoreParams)
   // case a / h / g / generic refuse — no restore path exists. Never touches the ledger
   // (a refusal is not itself a write attempt worth recording).
   if (plan.kind === 'refuse') {
+    await logDenial('rock_restore', params as unknown as Record<string, unknown>, plan.reason, effective.target);
     return { phase: 'refused', restore_of: { auditId: effective.auditId, ts: effective.ts, tool: effective.tool, verb: effective.verb, target: effective.target }, reason: plan.reason, operator };
   }
   if (plan.kind === 'sql-refuse') {
+    await logDenial(
+      'rock_restore',
+      params as unknown as Record<string, unknown>,
+      'SQL-mode edit/delete restore is not supported (documented scope cut).',
+      effective.target
+    );
     return {
       phase: 'refused',
       restore_of: { auditId: effective.auditId, ts: effective.ts, tool: effective.tool, verb: effective.verb, target: effective.target },
@@ -579,6 +633,11 @@ export async function rockRestore(client: RockClient, params: RockRestoreParams)
     target = { entityType: plan.entityType, id: plan.id };
     plannedPayload = body;
     plannedActionSummary = `PATCH ${plan.controller}/${plan.id} with {"IsActive":true}`;
+  } else if (plan.kind === 'attribute-set') {
+    op = { verb: 'edit', mode: 'rest', controller: 'People/AttributeValue', id: plan.personId, body: { key: plan.key, value: plan.value, restoreOf: params.audit_id, force: !!params.force } };
+    target = { entityType: 'AttributeValue', id: `${plan.personId}:${plan.key}` };
+    plannedPayload = { key: plan.key, value: plan.value };
+    plannedActionSummary = `Set Person ${plan.personId} attribute ${plan.key} to ${JSON.stringify(plan.value)}`;
   } else {
     // recreate
     op = { verb: 'create', mode: 'rest', controller: plan.controller, body: { ...plan.body, __restoreOf: params.audit_id, __force: !!params.force } };
@@ -591,9 +650,10 @@ export async function rockRestore(client: RockClient, params: RockRestoreParams)
   // ---- Phase 2: execute ----
   if (params.confirmation_token) {
     if (!validateToken(op, params.confirmation_token)) {
-      throw new Error(
-        'Confirmation token mismatch — arguments changed since the preview (including force), or the preview ' +
-          'was skipped. Re-call rock_restore with audit_id (and the SAME force value) WITHOUT a token to get a fresh preview.'
+      throw new WriteRefused(
+        'Confirmation token mismatch — arguments or reason changed since the preview (including force), or the preview ' +
+          'was skipped. Nothing was written. Re-call rock_restore with audit_id (and the SAME force value) WITHOUT a token to get a fresh preview.',
+        { entityType: target.entityType, id: target.id, table: target.table }
       );
     }
 
@@ -632,15 +692,22 @@ export async function rockRestore(client: RockClient, params: RockRestoreParams)
       const currentBefore = await tryGetCurrent(client, plan.controller, plan.id);
       const snapRef = await writeSnapshotFile(`${auditId}-before`, currentBefore);
       await client.v1Delete(`${plan.controller}/${plan.id}`);
+      const controller = plan.controller;
+      const id = plan.id;
+      const rb = await readBack(async () => {
+        const row = await tryGetCurrent(client, controller, id);
+        return { verified: row === null || (row as Record<string, unknown>).IsActive === false, after: row ?? undefined };
+      });
       const auditLogged = await appendAudit({
         auditId, ts, phase: 'executed', operator, sessionTag, tool: 'rock_restore', verb: 'delete', mode: 'rest',
         target: { entityType: plan.entityType, id: plan.id }, snapshotRef: snapRef,
         payload: { label: restoreLabel, restoreOf: params.audit_id, action: 'deleted', hard: true },
-        confirmationToken: params.confirmation_token, result: { success: true },
+        confirmationToken: params.confirmation_token, result: { success: true, verified: rb.verified },
       });
       return {
         phase: 'executed', success: true, verb: 'delete', mode: 'rest', restore_of: params.audit_id,
         controller: plan.controller, id: plan.id, action: 'deleted',
+        verified: rb.verified, verification_note: rb.verification_note,
         before_snapshot_ref: snapRef, auditId, auditLogged, operator,
       };
     }
@@ -653,15 +720,23 @@ export async function rockRestore(client: RockClient, params: RockRestoreParams)
       const currentBefore = await client.executeSql<unknown>(`SELECT * FROM [${plan.table}] WHERE Id = ${Number(plan.id)}`);
       const snapRef = await writeSnapshotFile(`${auditId}-before`, currentBefore);
       const rowsAffected = await client.executeSqlCommand(sql);
+      const table = plan.table;
+      const id = Number(plan.id);
+      const rb = await readBack(async () => {
+        const rows = await client.executeSql<unknown>(`SELECT * FROM [${table}] WHERE Id = ${id}`);
+        const left = Array.isArray(rows) ? rows.length : rows ? 1 : 0;
+        return { verified: left === 0 };
+      });
       const auditLogged = await appendAudit({
         auditId, ts, phase: 'executed', operator, sessionTag, tool: 'rock_restore', verb: 'delete', mode: 'sql',
         target: { entityType: normalizeEntityType(plan.table), table: plan.table }, snapshotRef: snapRef,
         payload: { label: restoreLabel, restoreOf: params.audit_id, sql }, confirmationToken: params.confirmation_token,
-        result: { success: true, rowsAffected },
+        result: { success: true, rowsAffected, verified: rb.verified },
       });
       return {
         phase: 'executed', success: true, verb: 'delete', mode: 'sql', restore_of: params.audit_id,
-        table: plan.table, rowsAffected, before_snapshot_ref: snapRef, auditId, auditLogged, operator,
+        table: plan.table, rowsAffected, verified: rb.verified, verification_note: rb.verification_note,
+        before_snapshot_ref: snapRef, auditId, auditLogged, operator,
       };
     }
 
@@ -672,26 +747,96 @@ export async function rockRestore(client: RockClient, params: RockRestoreParams)
       const currentBefore = await tryGetCurrent(client, controller, id);
       const snapRef = await writeSnapshotFile(`${auditId}-before`, currentBefore);
       await client.v1Patch(`${controller}/${id}`, body);
-      // After-readback is display-only and the PATCH has already succeeded — a failed
-      // readback must not fail the call (mirrors rock_edit's `.catch(() => undefined)`).
-      const after = await client.v1Get<unknown>(`${controller}/${id}`).catch(() => undefined);
+      // A failed re-read must not fail the call (the PATCH has already run) — it reports verified:false.
+      const rb = await readBack(async () => {
+        const after = await client.v1Get<unknown>(`${controller}/${id}`);
+        return { verified: fieldsMatch(after, body), after };
+      });
       const auditLogged = await appendAudit({
         auditId, ts, phase: 'executed', operator, sessionTag, tool: 'rock_restore', verb: 'edit', mode: 'rest',
         target: { entityType: plan.entityType, id }, snapshotRef: snapRef,
         payload: { label: restoreLabel, restoreOf: params.audit_id, body }, confirmationToken: params.confirmation_token,
-        result: { success: true },
+        result: { success: true, verified: rb.verified },
       });
       const hint = cacheHint(plan.entityType);
       return {
         phase: 'executed', success: true, verb: 'edit', mode: 'rest', restore_of: params.audit_id,
-        controller, id, body, before_snapshot_ref: snapRef, before: currentBefore, after,
+        controller, id, body, before_snapshot_ref: snapRef, before: currentBefore, after: rb.after,
+        verified: rb.verified, verification_note: rb.verification_note,
         cache_hint: hint, auditId, auditLogged, operator,
+      };
+    }
+
+    if (plan.kind === 'attribute-set') {
+      const currentBefore = await readPersonAttribute(client, plan.personId, plan.key);
+      const snapRef = await writeSnapshotFile(`${auditId}-before`, currentBefore);
+      await client.v1Post(
+        `People/AttributeValue/${plan.personId}?attributeKey=${encodeURIComponent(plan.key)}&attributeValue=${encodeURIComponent(plan.value)}`,
+        {}
+      );
+      const personId = plan.personId;
+      const key = plan.key;
+      const value = plan.value;
+      const rb = await readBack(async () => {
+        const after = await readPersonAttribute(client, personId, key);
+        return { verified: (after.Value ?? '') === value, after };
+      });
+      const auditLogged = await appendAudit({
+        auditId, ts, phase: 'executed', operator, sessionTag, tool: 'rock_restore', verb: 'edit', mode: 'rest',
+        target: { entityType: 'AttributeValue', id: `${personId}:${key}` }, snapshotRef: snapRef,
+        payload: { label: restoreLabel, restoreOf: params.audit_id, key, value },
+        undo: {
+          supported: true, kind: 'attribute-value', personId, key, value: currentBefore.Value ?? '',
+          how: `rock_restore sets ${key} on person ${personId} back to ${JSON.stringify(currentBefore.Value ?? '')}`,
+        },
+        confirmationToken: params.confirmation_token, result: { success: true, verified: rb.verified },
+      });
+      return {
+        phase: 'executed', success: true, verb: 'edit', restore_of: params.audit_id, personId, key, value,
+        before: currentBefore, after: rb.after, verified: rb.verified, verification_note: rb.verification_note,
+        before_snapshot_ref: snapRef, auditId, auditLogged, operator,
       };
     }
 
     // recreate
     const body = plannedPayload as Record<string, unknown>;
-    const res = await client.v1Post<unknown>(plan.controller, body);
+    // Rock's v1 REST refuses to add security-role members by design ("Security role membership
+    // cannot be managed through this endpoint", 403). Re-create those rows with a validated SQL
+    // INSERT instead (one installation live-tested this on Rock 19.8), then read the new Id by Guid.
+    // Whether the group is a security role is read from Rock, not assumed from an Id.
+    let securityRole: { groupTypeId: number } | null = null;
+    if (plan.controller === 'GroupMembers' && /^\d+$/.test(String(body.GroupId ?? ''))) {
+      const roleRows = await client.executeSql<Array<Record<string, unknown>>>(
+        `SELECT g.GroupTypeId, CAST(CASE WHEN g.IsSecurityRole = 1 OR gt.Guid = '${SECURITY_ROLE_GROUP_TYPE_GUID}' THEN 1 ELSE 0 END AS int) AS IsRole ` +
+          `FROM [Group] g JOIN GroupType gt ON gt.Id = g.GroupTypeId WHERE g.Id = ${Number(body.GroupId)}`
+      );
+      const r = Array.isArray(roleRows) ? roleRows[0] : undefined;
+      if (r && Number(r.IsRole) === 1 && Number.isInteger(Number(r.GroupTypeId))) securityRole = { groupTypeId: Number(r.GroupTypeId) };
+    }
+    let res: unknown;
+    if (securityRole) {
+      const int = (k: string, dflt?: number): number => {
+        const v = body[k] ?? dflt;
+        if (typeof v !== 'number' && !(typeof v === 'string' && /^-?\d+$/.test(v))) {
+          throw new Error(`rock_restore: security-role member snapshot has a non-integer ${k} (${JSON.stringify(v)}); not restoring.`);
+        }
+        return Number(v);
+      };
+      const bool = (k: string): number => (body[k] === true || body[k] === 1 ? 1 : 0);
+      const guid = String(body.Guid ?? '');
+      if (!/^[0-9a-fA-F-]{36}$/.test(guid)) throw new Error('rock_restore: security-role member snapshot has no valid Guid; not restoring.');
+      // "Now" in Rock's configured time zone (ROCK_TIMEZONE). Without it the dates are left NULL
+      // (all three columns are nullable) rather than guessing a zone.
+      const now = rockNowSql() ?? 'NULL';
+      const sql =
+        'INSERT INTO GroupMember (IsSystem, GroupId, PersonId, GroupRoleId, GroupMemberStatus, GroupTypeId, IsNotified, IsArchived, CommunicationPreference, DateTimeAdded, Guid, CreatedDateTime, ModifiedDateTime) ' +
+        `VALUES (0, ${int('GroupId')}, ${int('PersonId')}, ${int('GroupRoleId')}, ${int('GroupMemberStatus', 1)}, ${securityRole.groupTypeId}, ${bool('IsNotified')}, 0, ${int('CommunicationPreference', 0)}, ${now}, '${guid}', ${now}, ${now})`;
+      await client.executeSqlCommand(sql);
+      const rows = await client.executeSql(`SELECT Id FROM GroupMember WHERE Guid = '${guid}'`);
+      res = Array.isArray(rows) && rows[0] ? { Id: (rows[0] as Record<string, unknown>).Id } : null;
+    } else {
+      res = await client.v1Post<unknown>(plan.controller, body);
+    }
     const newId =
       typeof res === 'number'
         ? res
@@ -704,17 +849,23 @@ export async function rockRestore(client: RockClient, params: RockRestoreParams)
           'verify in Rock before retrying; the row may have been created without a returned Id.'
       );
     }
+    const recreatedController = plan.controller;
+    const rb = await readBack(async () => {
+      const row = await tryGetCurrent(client, recreatedController, newId);
+      return { verified: row !== null };
+    });
     // Recreates are logged like a create (result.newId set) so an undo-of-this-restore
     // is itself handled by the generic undo-create path (case b).
     const auditLogged = await appendAudit({
       auditId, ts, phase: 'executed', operator, sessionTag, tool: 'rock_restore', verb: 'create', mode: 'rest',
       target: { entityType: plan.entityType, id: newId }, payload: { label: restoreLabel, restoreOf: params.audit_id, body },
-      confirmationToken: params.confirmation_token, result: { success: true, newId },
+      confirmationToken: params.confirmation_token, result: { success: true, newId, verified: rb.verified },
     });
     const hint = cacheHint(plan.entityType);
     return {
       phase: 'executed', success: true, verb: 'create', mode: 'rest', restore_of: params.audit_id,
       controller: plan.controller, newId, body, droppedNavFields: plan.droppedNav.length ? plan.droppedNav : undefined,
+      verified: rb.verified, verification_note: rb.verification_note,
       cache_hint: hint, auditId, auditLogged, operator,
       warning: 'This row has a NEW numeric Id. Anything elsewhere in Rock that referenced the old Id by number (not Guid) will NOT be relinked.',
     };
@@ -763,6 +914,9 @@ export async function rockRestore(client: RockClient, params: RockRestoreParams)
     currentState = await client.executeSql<unknown>(`SELECT * FROM [${plan.table}] WHERE Id = ${Number(plan.id)}`);
     const rows = Array.isArray(currentState) ? currentState : currentState ? [currentState] : [];
     noop = rows.length === 0;
+  } else if (plan.kind === 'attribute-set') {
+    currentState = await readPersonAttribute(client, plan.personId, plan.key);
+    noop = ((currentState as { Value: string | null }).Value ?? '') === plan.value;
   } else {
     // recreate: probe by Guid
     if (plan.guid) {
@@ -834,6 +988,20 @@ export async function rockRestore(client: RockClient, params: RockRestoreParams)
       'Only after they approve, re-call rock_restore with the SAME arguments (including force, if set) plus this confirmation_token to execute.',
     operator,
   };
+}
+
+/** Current stored value of a Person attribute by key (attribute-set restore + read-back). */
+async function readPersonAttribute(
+  client: RockClient,
+  personId: number,
+  key: string
+): Promise<{ personId: number; key: string; Value: string | null }> {
+  const rows = await client.executeSql<Array<{ Value: string | null }>>(
+    `SELECT TOP 1 av.Value FROM Attribute a LEFT JOIN AttributeValue av ON av.AttributeId = a.Id AND av.EntityId = ${Number(personId)} ` +
+      `WHERE a.EntityTypeId = 15 AND a.[Key] = '${key.replace(/'/g, "''")}' AND ISNULL(a.EntityTypeQualifierColumn, '') = ''`
+  );
+  const row = Array.isArray(rows) ? rows[0] : undefined;
+  return { personId, key, Value: row?.Value ?? null };
 }
 
 /**

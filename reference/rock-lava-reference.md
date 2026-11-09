@@ -214,19 +214,18 @@ Don't iterate blindly on the production template — the debug round trip is fas
 ## 10. Time zones — server-computed date properties are UTC, Lava `'Now'` is org-local
 
 LH's Rock SQL server runs on UTC. **Person properties that include a "today" comparison are
-computed server-side using the SQL clock, so they flip a day around 6–7pm Central** (when UTC
+computed server-side using the SQL clock, so they flip a day in the evening local time (6–7pm on the US-Central install where this was observed)** (when UTC
 rolls over).
 
 Affected properties (non-exhaustive — anything that compares to "today" on the server):
 - `DaysUntilBirthday`
 - `DaysUntilAnniversary`
-- `Age` (only on the actual birthday — wrong for people whose birthday is today-Central but
+- `Age` (only on the actual birthday — wrong for people whose birthday is today in local time but
   tomorrow-UTC)
 - Any custom calculated SQL field using `GETDATE()` / `GETUTCDATE()` against today
 
 In contrast, **Lava's `'Now'` uses `RockDateTime.Now`, which respects Rock's org-configured
-time zone** (System Settings → General Configuration → Organization Time Zone, currently
-Central). So `'Now' | Date:'yyyy-MM-dd'` is correct from Lava's perspective even when the SQL
+time zone** (System Settings → General Configuration → Organization Time Zone, whatever your admin set). So `'Now' | Date:'yyyy-MM-dd'` is correct from Lava's perspective even when the SQL
 server is wrong.
 
 ### The rule
@@ -272,7 +271,7 @@ sorting:
 ### Real example
 
 The homepage birthday block was showing tomorrow's birthdays with a "TODAY" badge after ~6pm
-Central because the SQL server had already rolled to the next UTC day. The fix recomputes
+local time because the SQL server had already rolled to the next UTC day. The fix recomputes
 `daysUntil` in Lava and buckets cards before rendering. Code lives on the homepage HTML block.
 
 ### Root-cause alternative
@@ -368,4 +367,3 @@ sometimes needs `!important` to override text/labels in embedded custom blocks.
 - the local implementation of this pattern — metric + workflow + dashboard build recipes that use these
   patterns in anger.
 - The `/rock-build` skill — the generalized recipes, including the newer traps (PascalCase
-  math filters, `Split` nullable-last, `InitiatorPersonAlias` blank in action Lava).

@@ -9,9 +9,9 @@ export type Verb = 'create' | 'edit' | 'delete';
 export type Mode = 'rest' | 'sql';
 
 /**
- * Who performed a write. Rock sees one shared REST key, so attribution can't come from
- * Rock — we stamp every write with the operator's git identity instead (PRs/commits carry
- * the durable record). This is the single swap point for per-person Rock keys later.
+ * Who performed a write, from the operator's git identity. When each operator has their own
+ * Rock REST key, Rock also records the write against that person; the git
+ * identity is stamped on every ledger record so the local ledger says who ran it too.
  */
 export interface GitIdentity {
   email: string;
@@ -28,6 +28,12 @@ export interface WriteOp {
   table?: string; // SQL table for sql writes
   body?: unknown; // REST body for create/edit
   sql?: string; // SQL statement for sql writes
+  /**
+   * Why the write is being made. Part of the token, so changing the reason between preview and
+   * execute needs a fresh preview. When omitted, deriveToken uses the reason of the write call
+   * in progress (see safety/writeGuard.ts), so every tool's token covers its reason.
+   */
+  reason?: string;
 }
 
 /** A captured before-state (the revert source for edits/deletes). */
@@ -57,12 +63,17 @@ export interface ImpactResult {
 export interface AuditRecord {
   auditId: string;
   ts: string;
-  phase: 'create' | 'preview' | 'executed';
+  /**
+   * 'denied' = a write call that was refused before anything was written (missing reason, bulk
+   * cap, token mismatch, bundle gate, SQL preflight...). Denied records are never restore
+   * candidates: findLedgerRecord / laterWritesToTarget / list mode only look at the other phases.
+   */
+  phase: 'create' | 'preview' | 'executed' | 'denied';
   operator: GitIdentity;
   /**
    * Optional per-call session identifier, so "did my session touch prod?" is answerable
    * without enumerating your own auditIds and diffing against everyone else's. `operator`
-   * only ever carries the shared git identity of whoever set up this Mac's Rock MCP config —
+   * only ever carries the git identity of whoever set up this Mac's Rock MCP config —
    * it is the SAME value for every concurrent Claude Code session, scheduled task, and build
    * script on the box, so it cannot distinguish "my session" from "a different session
    * running at the same time" (see reference/rock-sessions-lessons L4/L3 for the incident
@@ -95,5 +106,24 @@ export interface AuditRecord {
   impactSummary?: string;
   payload?: unknown;
   confirmationToken?: string;
-  result: { success: boolean; newId?: string | number; rowsAffected?: number; error?: string };
+  /** Why the write was made (required on every write tool since 2026-11). */
+  reason?: string;
+  /** phase 'denied' only: why the call was refused. */
+  denial?: string;
+  /**
+   * How (or whether) rock_restore can undo this record. Absent = the generic plans in
+   * rock-restore.ts apply. supported:false makes rock_restore refuse with `why`.
+   * kind:'attribute-value' = set a Person attribute back to `value` (set_person_attribute).
+   */
+  undo?:
+    | { supported: false; why: string }
+    | { supported: true; how: string; kind?: 'attribute-value'; personId?: number; key?: string; value?: string };
+  result: {
+    success: boolean;
+    newId?: string | number;
+    rowsAffected?: number;
+    error?: string;
+    /** true when a re-read after the write confirmed it landed; false when it did not or could not. */
+    verified?: boolean;
+  };
 }

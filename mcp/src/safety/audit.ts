@@ -15,6 +15,7 @@ import { join } from 'node:path';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { AuditRecord } from './types.js';
+import { currentWriteContext } from './writeContext.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -35,6 +36,12 @@ try {
  * caller can surface a warning without losing the (already-applied) operation.
  */
 export async function appendAudit(rec: AuditRecord): Promise<boolean> {
+  // Stamp the reason (and session tag) of the write call in progress onto every record.
+  const ctx = currentWriteContext();
+  if (ctx) {
+    if (rec.reason === undefined) rec = { ...rec, reason: ctx.reason };
+    if (rec.sessionTag === undefined && ctx.sessionTag) rec = { ...rec, sessionTag: ctx.sessionTag };
+  }
   try {
     await mkdir(LOGS_DIR, { recursive: true });
     await appendFile(AUDIT_FILE, JSON.stringify(rec) + '\n');

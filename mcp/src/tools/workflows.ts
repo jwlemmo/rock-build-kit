@@ -11,6 +11,8 @@
  */
 
 import { RockClient } from '../rock-client.js';
+import { runLegacyWrite } from '../safety/index.js';
+import { v1GetOrNull, CREATE_CALL_PROPS, type WriteCallParams } from './legacy-helpers.js';
 
 function lq(value: string): string {
   return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
@@ -62,7 +64,7 @@ export async function listWorkflowTypes(
 
 // ---------------- launch_workflow ----------------
 
-export interface LaunchWorkflowParams {
+export interface LaunchWorkflowParams extends WriteCallParams {
   workflowTypeId: number;
   name?: string;
   attributeValues?: Record<string, string | number | boolean>;
@@ -79,7 +81,8 @@ export const launchWorkflowSchema = {
     'so they are set before processing starts — keep values short and non-sensitive. ' +
     'A form-gated intake does NOT hang: it processes up to the form, reports Status "Active", ' +
     'and (if the type persists instances) remains in Rock waiting for the form — complete or ' +
-    'clean it up in the UI. Always confirm with the user before calling.',
+    'clean it up in the UI. Runs at once and is recorded in the audit ledger. rock_restore cannot undo a ' +
+    'launch: the workflow\'s actions (emails, assignments, attribute changes) have already run.',
   inputSchema: {
     type: 'object' as const,
     properties: {
@@ -89,8 +92,9 @@ export const launchWorkflowSchema = {
         type: 'object',
         description: 'Attribute initial values keyed by Attribute Key (validated against the type before launch; set before processing begins)',
       },
+      ...CREATE_CALL_PROPS,
     },
-    required: ['workflowTypeId'],
+    required: ['workflowTypeId', 'reason'],
   },
 };
 
@@ -128,102 +132,134 @@ export async function launchWorkflow(
   client: RockClient,
   params: LaunchWorkflowParams
 ): Promise<unknown> {
-  const wt = await client.v2Get<{ name: string; isActive?: boolean }>(
-    `workflowTypes/${params.workflowTypeId}`
-  );
-  if (wt.isActive === false) {
-    throw new Error(
-      `WorkflowType ${params.workflowTypeId} ("${wt.name}") is inactive — Rock will not launch instances of it.`
+  return runLegacyWrite('launch_workflow', params, async () => {
+    const wt = await client.v2Get<{ name: string; isActive?: boolean }>(
+      `workflowTypes/${params.workflowTypeId}`
     );
-  }
-
-  // Validate attribute keys BEFORE creating an instance: WorkflowEntry silently ignores
-  // unknown keys, which would launch a workflow missing the data it was supposed to carry.
-  const requestedKeys = Object.keys(params.attributeValues ?? {});
-  let canonical: Record<string, string | number | boolean> | undefined;
-  let attributeValidation = 'none requested';
-  if (requestedKeys.length > 0) {
-    try {
-      const attrs = (await client.v2Search('attributes', {
-        where: `EntityTypeQualifierColumn == "WorkflowTypeId" && EntityTypeQualifierValue == "${params.workflowTypeId}"`,
-        limit: 200,
-      })) as Array<{ key?: string }>;
-      const byLower = new Map(
-        (Array.isArray(attrs) ? attrs : [])
-          .filter((a): a is { key: string } => typeof a?.key === 'string')
-          .map((a) => [a.key.toLowerCase(), a.key])
+    if (wt.isActive === false) {
+      throw new Error(
+        `WorkflowType ${params.workflowTypeId} ("${wt.name}") is inactive — Rock will not launch instances of it.`
       );
-      const unknown: string[] = [];
-      canonical = {};
-      for (const k of requestedKeys) {
-        const actual = byLower.get(k.toLowerCase());
-        if (actual) canonical[actual] = params.attributeValues![k];
-        else unknown.push(k);
-      }
-      if (unknown.length) {
-        throw new Error(
-          `launch_workflow: WorkflowType ${params.workflowTypeId} has no workflow attribute(s) ` +
-            `${unknown.join(', ')} — Rock would silently ignore them, so the launch was NOT attempted. ` +
-            `Available keys: ${[...byLower.values()].join(', ') || '(none)'}.`
+    }
+
+    // Validate attribute keys BEFORE creating an instance: WorkflowEntry silently ignores
+    // unknown keys, which would launch a workflow missing the data it was supposed to carry.
+    const requestedKeys = Object.keys(params.attributeValues ?? {});
+    let canonical: Record<string, string | number | boolean> | undefined;
+    let attributeValidation = 'none requested';
+    if (requestedKeys.length > 0) {
+      try {
+        const attrs = (await client.v2Search('attributes', {
+          where: `EntityTypeQualifierColumn == "WorkflowTypeId" && EntityTypeQualifierValue == "${params.workflowTypeId}"`,
+          limit: 200,
+        })) as Array<{ key?: string }>;
+        const byLower = new Map(
+          (Array.isArray(attrs) ? attrs : [])
+            .filter((a): a is { key: string } => typeof a?.key === 'string')
+            .map((a) => [a.key.toLowerCase(), a.key])
         );
+        const unknown: string[] = [];
+        canonical = {};
+        for (const k of requestedKeys) {
+          const actual = byLower.get(k.toLowerCase());
+          if (actual) canonical[actual] = params.attributeValues![k];
+          else unknown.push(k);
+        }
+        if (unknown.length) {
+          throw new Error(
+            `launch_workflow: WorkflowType ${params.workflowTypeId} has no workflow attribute(s) ` +
+              `${unknown.join(', ')} — Rock would silently ignore them, so the launch was NOT attempted. ` +
+              `Available keys: ${[...byLower.values()].join(', ') || '(none)'}.`
+          );
+        }
+        attributeValidation = `validated ${requestedKeys.length} key(s)`;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (msg.includes('launch_workflow:')) throw e; // our own unknown-key rejection
+        // The attribute lookup itself failed (endpoint hiccup) — launch anyway rather than
+        // block a valid launch, but say so.
+        canonical = params.attributeValues;
+        attributeValidation = `skipped (attribute lookup failed: ${msg.slice(0, 160)})`;
       }
-      attributeValidation = `validated ${requestedKeys.length} key(s)`;
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      if (msg.includes('launch_workflow:')) throw e; // our own unknown-key rejection
-      // The attribute lookup itself failed (endpoint hiccup) — launch anyway rather than
-      // block a valid launch, but say so.
-      canonical = params.attributeValues;
-      attributeValidation = `skipped (attribute lookup failed: ${msg.slice(0, 160)})`;
     }
-  }
 
-  // WorkflowEntry instantiates AND processes in one synchronous call.
-  const wf = await client.v1Post<Record<string, unknown>>(
-    buildWorkflowEntryPath(params.workflowTypeId, canonical),
-    {}
-  );
+    return {
+      verb: 'create',
+      entityType: 'Workflow',
+      intended: { workflowTypeId: params.workflowTypeId, workflowTypeName: wt.name, name: params.name, attributes: requestedKeys },
+      undo: {
+        supported: false,
+        why:
+          'A launched workflow has already run its actions (emails, assignments, attribute changes). Deleting the ' +
+          'instance would not reverse them, so rock_restore does not offer it. Clean up in the Rock admin UI.',
+      },
+      apply: async () => {
+        // WorkflowEntry instantiates AND processes in one synchronous call.
+        const wf = await client.v1Post<Record<string, unknown>>(
+          buildWorkflowEntryPath(params.workflowTypeId, canonical),
+          {}
+        );
 
-  const activities = Array.isArray(wf.Activities)
-    ? (wf.Activities as Array<Record<string, unknown>>)
-    : [];
-  const workflowId = parseId(wf) ?? parseId(activities[0]?.WorkflowId);
-  const status = typeof wf.Status === 'string' ? wf.Status : 'Unknown';
-  const persisted = wf.IsPersisted === true;
-  const completed = status === 'Completed';
+        const activities = Array.isArray(wf.Activities)
+          ? (wf.Activities as Array<Record<string, unknown>>)
+          : [];
+        const workflowId = parseId(wf) ?? parseId(activities[0]?.WorkflowId);
+        const status = typeof wf.Status === 'string' ? wf.Status : 'Unknown';
+        const persisted = wf.IsPersisted === true;
+        const completed = status === 'Completed';
 
-  // Optional rename — WorkflowEntry hardcodes the name "Workflow From REST".
-  let nameApplied = false;
-  let nameError: string | undefined;
-  if (params.name && workflowId != null && persisted) {
-    try {
-      await client.v1Patch(`Workflows/${workflowId}`, { Name: params.name });
-      nameApplied = true;
-    } catch (e) {
-      nameError = e instanceof Error ? e.message : String(e);
-    }
-  }
+        // Optional rename — WorkflowEntry hardcodes the name "Workflow From REST".
+        let nameApplied = false;
+        let nameError: string | undefined;
+        if (params.name && workflowId != null && persisted) {
+          try {
+            await client.v1Patch(`Workflows/${workflowId}`, { Name: params.name });
+            nameApplied = true;
+          } catch (e) {
+            nameError = e instanceof Error ? e.message : String(e);
+          }
+        }
 
-  return {
-    success: completed,
-    workflowId,
-    workflowTypeId: params.workflowTypeId,
-    workflowTypeName: wt.name,
-    name: nameApplied ? params.name : typeof wf.Name === 'string' ? wf.Name : undefined,
-    nameError,
-    status,
-    persisted,
-    completedDateTime:
-      typeof wf.CompletedDateTime === 'string' ? wf.CompletedDateTime : undefined,
-    attributeValidation,
-    attributesSet: requestedKeys.length,
-    message: completed
-      ? `Launched and completed Workflow ${workflowId} from type ${params.workflowTypeId} ("${wt.name}").`
-      : `Workflow ${workflowId ?? '(id unknown)'} was created and processed but finished with ` +
-        `Status "${status}" — it is waiting on something (usually a user-entry form or a ` +
-        `delayed/async action). ` +
-        (persisted
-          ? 'A waiting instance now exists in Rock — complete it in the UI or clean it up.'
-          : 'The type does not persist instances, so nothing lingers.'),
-  };
+        const result: Record<string, unknown> = {
+          success: completed,
+          workflowId,
+          workflowTypeId: params.workflowTypeId,
+          workflowTypeName: wt.name,
+          name: nameApplied ? params.name : typeof wf.Name === 'string' ? wf.Name : undefined,
+          nameError,
+          status,
+          persisted,
+          completedDateTime:
+            typeof wf.CompletedDateTime === 'string' ? wf.CompletedDateTime : undefined,
+          attributeValidation,
+          attributesSet: requestedKeys.length,
+          message: completed
+            ? `Launched and completed Workflow ${workflowId} from type ${params.workflowTypeId} ("${wt.name}").`
+            : `Workflow ${workflowId ?? '(id unknown)'} was created and processed but finished with ` +
+              `Status "${status}" — it is waiting on something (usually a user-entry form or a ` +
+              `delayed/async action). ` +
+              (persisted
+                ? 'A waiting instance now exists in Rock — complete it in the UI or clean it up.'
+                : 'The type does not persist instances, so nothing lingers.'),
+        };
+        return {
+          result,
+          newId: workflowId ?? undefined,
+          readBack: async () => {
+            if (workflowId == null) {
+              return { verified: false, note: 'WorkflowEntry returned no workflow Id, so nothing could be re-read.' };
+            }
+            if (!persisted) {
+              return {
+                verified: false,
+                note: 'This workflow type does not persist instances, so there is no row to re-read. The status above is Rock\'s own synchronous report of the run.',
+              };
+            }
+            const row = await v1GetOrNull<Record<string, unknown>>(client, `Workflows/${workflowId}`);
+            return { verified: row != null, after: row ? { Id: row.Id, Name: row.Name, Status: row.Status } : undefined };
+          },
+        };
+      },
+    };
+  });
 }

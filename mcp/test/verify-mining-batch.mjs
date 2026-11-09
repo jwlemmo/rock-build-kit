@@ -55,24 +55,32 @@ await throwsWith('verifyByGuid absent from the SQL text is rejected pre-write',
   'does not appear as a literal');
 check('pre-validation ran before any write', writeCalls === 0);
 
-// verify SELECT failing AFTER the insert must say the write may have committed
+// verify SELECT failing AFTER the insert must say the write may have committed.
+// The SQL preflight reads the table's columns first, so the fakes answer that query.
+const SCHEMA_ROWS = [{ COLUMN_NAME: 'Guid', IS_NULLABLE: 'NO', HasDefault: 0, IsIdentity: 0, IsComputed: 0 }];
+const schemaOr = (fn) => async (q) => (/INFORMATION_SCHEMA/.test(q) ? SCHEMA_ROWS : fn(q));
+// Writes now report a failed re-read as verified:false with a note (never thrown, never retried).
+const reportsWith = async (name, fn, substr) => {
+  try { const r = await fn(); check(name, r?.verified === false && String(r?.verification_note ?? '').includes(substr)); }
+  catch (e) { check(name, String(e.message).includes(substr)); }
+};
 const insertSql = `INSERT INTO AttributeValue (Guid) VALUES ('${REAL_GUID}')`;
-await throwsWith('verify-SELECT error reports the INSERT already executed',
+await reportsWith('verify-SELECT error reports the INSERT already executed',
   () => rockCreate(
-    { executeSqlCommand: async () => 1, executeSql: async () => { throw new Error('Conversion failed when converting from a character string to uniqueidentifier.'); } },
+    { executeSqlCommand: async () => 1, executeSql: schemaOr(async () => { throw new Error('Conversion failed when converting from a character string to uniqueidentifier.'); }) },
     { mode: 'sql', sql: insertSql, verifyByGuid: REAL_GUID }),
-  'The row may already exist');
-await throwsWith('empty verify result warns against blind retry',
+  'The INSERT executed');
+await reportsWith('empty verify result warns against blind retry',
   () => rockCreate(
-    { executeSqlCommand: async () => 1, executeSql: async () => [] },
+    { executeSqlCommand: async () => 1, executeSql: schemaOr(async () => []) },
     { mode: 'sql', sql: insertSql, verifyByGuid: REAL_GUID }),
   'may have committed');
 
 // --- MCP-11: get_person arg coercion ---
 let gotPath = null;
-const personClient = { v2Get: async (path) => { gotPath = path; return { id: 103429 }; } };
-await getPerson(personClient, { personId: '103429' });
-check('get_person accepts personId as a numeric string', gotPath === 'people/103429');
+const personClient = { v2Get: async (path) => { gotPath = path; return { id: 4242 }; } };
+await getPerson(personClient, { personId: '4242' });
+check('get_person accepts personId as a numeric string', gotPath === 'people/4242');
 await getPerson(personClient, { id: 413233 });
 check('get_person still accepts id as a number', gotPath === 'people/413233');
 await throwsWith('get_person with no id fails with a clear message',

@@ -13,3 +13,15 @@ Upstream observations came from Rock 17–19-era installations. Not every endpoi
 Version 1.1.0 adds the private Secure MCP Tunnel workflow, real Chat/Work plugin manifests, per-church app-binding generator, and a read-only get_build_guide tool served by MCP. Church-specific tunnel IDs, app IDs and keys are generated only under ignored local paths.
 
 Version 1.2.0 adds guided per-church private GitHub change-log setup, a fresh repository template, privacy verification, and a changelog guide available through MCP. It contains no preconfigured repository owner or church credentials.
+
+## Version 1.3.0 — 2026-11-08
+
+Adds church-neutral guidance learned on Rock 19.8.1. Measured facts are labeled "observed on Rock 19.8.1" (one installation, one date); they do not assume your church runs that version.
+
+- Field notes gain a provenance tier on newer entries (`measured` | `traced` | `summarized`, plus "verified on <version>, <date>"), the 19.8.1 observations (the Lava `/-` block-comment trap, int-vs-string `==`, truthiness and `AsInteger`, security-role membership by raw SQL vs `{% modifygroupmember %}`, REST refusing role membership), the 19.8 REST and Lava changes (traced from release notes and issue trackers, not tested live), field-validation logging, the v20/v21 removals, AI agent chat retention, MCP agent notes, and a "From other Rock builders" section restated in this kit's own words with attribution to the public repositories.
+- rock-build: prompt-injection rule, required `reason` and two-phase data edits, bulk cap, SQL preflight rules, a configured time-zone rule (`ROCK_TIMEZONE`, a Windows time-zone name; no default zone is assumed), Spark's SQL insert checklist, workflow, cache, entity-command and Lava traps, agent tool conventions, and a Lava Applications recipe.
+- rock-query: SQL performance and schema shortcuts. rock-grant-access: Auth ordering, `NOT EXISTS` record-level guards, `EntityId = 0`, no core self-lockout protection, test as a normal staff user, 19.8 REST hardening.
+- rock-change-management and rock-test: reason on writes, and pre-promotion checks (versions, low-rights test, field-validation log, 19.8 REST rules, security review) recorded in the church's own change-log bundle. The existing configurable bundle gate and runtime ID discovery are unchanged.
+- `config/.env.example` documents `ROCK_TIMEZONE` and `ROCK_MCP_BULK_WRITE_MAX`.
+
+No church-specific IDs, hosts, people or counts were imported.

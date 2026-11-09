@@ -11,6 +11,9 @@ import {
   writeSnapshotFile,
   deriveToken,
   validateToken,
+  WriteRefused,
+  readBack,
+  REASON_PARAM,
   type WriteOp,
 } from '../safety/index.js';
 
@@ -93,7 +96,7 @@ export async function getMetrics(client: RockClient, params: GetMetricsParams): 
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     // Rock v18.2 regression: v2 metricvalues/search 500s on EVERY query shape (verified
-    // 2026-07-19 on rockdev incl. bare limit-1, while other v2 searches work). Degrade to
+    // 2026-07-19 on a dev server incl. bare limit-1, while other v2 searches work). Degrade to
     // SQL, which expresses the same filters on every Rock version.
     if (!/→\s*5\d\d/.test(msg)) throw err;
     const clauses = [`mv.MetricId = ${metricId}`];
@@ -139,6 +142,7 @@ export interface UpsertMetricValueParams {
   note?: string;
   confirmation_token?: string;
   session_tag?: string;
+  reason?: string;
 }
 
 export const upsertMetricValueSchema = {
@@ -188,8 +192,9 @@ export const upsertMetricValueSchema = {
           'Optional: your Claude session id, recorded on the audit ledger entry alongside the ' +
           'operator\'s git identity, so "did my session touch prod?" is answerable later.',
       },
+      reason: REASON_PARAM,
     },
-    required: ['metricId', 'date', 'value'],
+    required: ['metricId', 'date', 'value', 'reason'],
   },
 };
 
@@ -364,7 +369,7 @@ export async function upsertMetricValue(
   const existing = Array.isArray(matches) ? matches : [];
 
   if (existing.length > 1) {
-    throw new Error(
+    throw new WriteRefused(
       `upsert_metric_value: ${existing.length} existing MetricValues match metric ${params.metricId} ` +
         `on ${dateStr} with that partition set (Ids ${existing.map((m) => m.Id).join(', ')}) — ` +
         `likely calc-job seam duplicates. Resolve them first (rock_delete), then retry.`
@@ -376,7 +381,7 @@ export async function upsertMetricValue(
   // ---- CREATE (no match): "create = light" ----
   if (existing.length === 0) {
     if (params.confirmation_token) {
-      throw new Error(
+      throw new WriteRefused(
         'upsert_metric_value: a confirmation_token was passed but no existing MetricValue matches — ' +
           'the row may have been deleted since the preview. Re-call WITHOUT the token.'
       );
@@ -411,12 +416,19 @@ export async function upsertMetricValue(
       }
     }
 
+    const rbCreate = await readBack(async () => {
+      const rows = await client.executeSql<Array<{ Id: number; YValue: number | null }>>(
+        `SELECT Id, YValue FROM MetricValue WHERE Id = ${Number(metricValueId)}`
+      );
+      const r = Array.isArray(rows) ? rows[0] : undefined;
+      return { verified: !!r && Number(r.YValue) === params.value && partitionErrors.length === 0, after: r };
+    });
     const auditId = shortHash(`upsert-create|${params.metricId}|${dateStr}|${JSON.stringify(resolved)}|${ts}`);
     const auditLogged = await appendAudit({
       auditId, ts, phase: 'create', operator, sessionTag, tool: 'upsert_metric_value', verb: 'create', mode: 'rest',
       target: { entityType: 'MetricValue', id: metricValueId },
       payload: { metric: metric.name, metricId: params.metricId, date: dateStr, value: params.value, partitions: partitionSummary, note: params.note },
-      result: { success: partitionErrors.length === 0, newId: metricValueId },
+      result: { success: partitionErrors.length === 0, newId: metricValueId, verified: rbCreate.verified },
     });
 
     return {
@@ -430,6 +442,8 @@ export async function upsertMetricValue(
       partitions: partitionSummary,
       partitionErrors: partitionErrors.length ? partitionErrors : undefined,
       warnings: warnings.length ? warnings : undefined,
+      verified: rbCreate.verified,
+      verification_note: rbCreate.verification_note,
       auditId, auditLogged, operator,
       message:
         partitionErrors.length === 0
@@ -448,20 +462,25 @@ export async function upsertMetricValue(
 
   if (params.confirmation_token) {
     if (!validateToken(op, params.confirmation_token)) {
-      throw new Error(
-        'Confirmation token mismatch — arguments changed since the preview, or the preview was skipped. ' +
-          'Re-call upsert_metric_value WITHOUT a token to get a fresh preview.'
+      throw new WriteRefused(
+        'Confirmation token mismatch — arguments or reason changed since the preview, or the preview was skipped. ' +
+          'Nothing was written. Re-call upsert_metric_value WITHOUT a token to get a fresh preview.',
+        { entityType: 'MetricValue', id: row.Id }
       );
     }
     const snapRef = await writeSnapshotFile(`${shortHash(token)}-before`, row);
     await client.v1Patch(`MetricValues/${row.Id}`, editBody);
+    const rbEdit = await readBack(async () => {
+      const after = await client.v1Get<Record<string, unknown>>(`MetricValues/${row.Id}`);
+      return { verified: Number(after?.YValue) === params.value, after: { YValue: after?.YValue, Note: after?.Note } };
+    });
     const auditId = shortHash(token);
     const auditLogged = await appendAudit({
       auditId, ts, phase: 'executed', operator, sessionTag, tool: 'upsert_metric_value', verb: 'edit', mode: 'rest',
       target: { entityType: 'MetricValue', id: row.Id }, snapshotRef: snapRef,
       payload: { metric: metric.name, metricId: params.metricId, date: dateStr, value: params.value, partitions: partitionSummary, note: params.note },
       confirmationToken: params.confirmation_token,
-      result: { success: true },
+      result: { success: true, verified: rbEdit.verified },
     });
     return {
       action: 'updated',
@@ -475,6 +494,9 @@ export async function upsertMetricValue(
       partitions: partitionSummary,
       before_snapshot_ref: snapRef,
       warnings: warnings.length ? warnings : undefined,
+      verified: rbEdit.verified,
+      after: rbEdit.after,
+      verification_note: rbEdit.verification_note,
       auditId, auditLogged, operator,
       message: `Updated MetricValue ${row.Id}: ${row.YValue} → ${params.value}.`,
     };

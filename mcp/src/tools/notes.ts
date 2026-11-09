@@ -14,6 +14,8 @@
  */
 
 import { RockClient } from '../rock-client.js';
+import { runLegacyWrite } from '../safety/index.js';
+import { idFrom, createdRowExists, CREATE_CALL_PROPS, CREATE_NOTE, type WriteCallParams } from './legacy-helpers.js';
 
 function lq(value: string): string {
   return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
@@ -106,7 +108,7 @@ export async function getNotes(client: RockClient, params: GetNotesParams): Prom
 
 // ---------------- add_note ----------------
 
-export interface AddNoteParams {
+export interface AddNoteParams extends WriteCallParams {
   personId?: number;
   entityType?: string;
   entityId?: number;
@@ -122,8 +124,7 @@ export const addNoteSchema = {
   name: 'add_note',
   description:
     'Add a Note to a Person (pass personId) or any entity (pass entityType + entityId). ' +
-    'Specify NoteType via noteTypeId (preferred) or noteTypeName (e.g. "Personal Note"). ' +
-    'Always confirm with the user before calling.',
+    'Specify NoteType via noteTypeId (preferred) or noteTypeName (e.g. "Personal Note").' + CREATE_NOTE,
   inputSchema: {
     type: 'object' as const,
     properties: {
@@ -136,66 +137,80 @@ export const addNoteSchema = {
       caption: { type: 'string', description: 'Optional caption / title' },
       isAlert: { type: 'boolean', description: 'Mark as alert' },
       isPrivateNote: { type: 'boolean', description: 'Mark as private (only visible to creator)' },
+      ...CREATE_CALL_PROPS,
     },
-    required: ['text'],
+    required: ['text', 'reason'],
   },
 };
 
 export async function addNote(client: RockClient, params: AddNoteParams): Promise<unknown> {
-  let entityTypeId: number | undefined;
-  let entityId: number | undefined = params.entityId;
+  return runLegacyWrite('add_note', params, async () => {
+    let entityTypeId: number | undefined;
+    let entityId: number | undefined = params.entityId;
 
-  if (params.personId !== undefined) {
-    entityTypeId = await resolveEntityTypeId(client, 'Person');
-    entityId = params.personId;
-  } else if (params.entityType) {
-    entityTypeId = await resolveEntityTypeId(client, params.entityType);
-  }
+    if (params.personId !== undefined) {
+      entityTypeId = await resolveEntityTypeId(client, 'Person');
+      entityId = params.personId;
+    } else if (params.entityType) {
+      entityTypeId = await resolveEntityTypeId(client, params.entityType);
+    }
 
-  if (!entityTypeId || entityId === undefined) {
-    throw new Error('Provide either personId, or both entityType and entityId.');
-  }
+    if (!entityTypeId || entityId === undefined) {
+      throw new Error('Provide either personId, or both entityType and entityId.');
+    }
 
-  let noteTypeId = params.noteTypeId;
-  if (!noteTypeId) {
-    const typeName = params.noteTypeName ?? 'Personal Note';
-    const types = await client.v2Search<Array<{ id: number; name: string }>>('noteTypes', {
-      where: `EntityTypeId == ${entityTypeId} && Name == ${lq(typeName)}`,
-      limit: 1,
-    });
-    if (Array.isArray(types) && types.length > 0) {
-      noteTypeId = types[0].id;
-    } else {
-      // Fall back to any note type for this entity type
-      const any = await client.v2Search<Array<{ id: number; name: string }>>('noteTypes', {
-        where: `EntityTypeId == ${entityTypeId} && UserSelectable == true`,
-        sort: 'Order',
+    let noteTypeId = params.noteTypeId;
+    if (!noteTypeId) {
+      const typeName = params.noteTypeName ?? 'Personal Note';
+      const types = await client.v2Search<Array<{ id: number; name: string }>>('noteTypes', {
+        where: `EntityTypeId == ${entityTypeId} && Name == ${lq(typeName)}`,
         limit: 1,
       });
-      if (Array.isArray(any) && any.length > 0) {
-        noteTypeId = any[0].id;
+      if (Array.isArray(types) && types.length > 0) {
+        noteTypeId = types[0].id;
       } else {
-        throw new Error(`No NoteType found for entity type ${entityTypeId}`);
+        // Fall back to any note type for this entity type
+        const any = await client.v2Search<Array<{ id: number; name: string }>>('noteTypes', {
+          where: `EntityTypeId == ${entityTypeId} && UserSelectable == true`,
+          sort: 'Order',
+          limit: 1,
+        });
+        if (Array.isArray(any) && any.length > 0) {
+          noteTypeId = any[0].id;
+        } else {
+          throw new Error(`No NoteType found for entity type ${entityTypeId}`);
+        }
       }
     }
-  }
 
-  const body: Record<string, unknown> = {
-    NoteTypeId: noteTypeId,
-    EntityId: entityId,
-    Text: params.text,
-    IsAlert: params.isAlert ?? false,
-    IsPrivateNote: params.isPrivateNote ?? false,
-  };
-  if (params.caption) body.Caption = params.caption;
+    const body: Record<string, unknown> = {
+      NoteTypeId: noteTypeId,
+      EntityId: entityId,
+      Text: params.text,
+      IsAlert: params.isAlert ?? false,
+      IsPrivateNote: params.isPrivateNote ?? false,
+    };
+    if (params.caption) body.Caption = params.caption;
 
-  const newId = await client.v1Post<number>('Notes', body);
-  return {
-    success: true,
-    noteId: newId,
-    noteTypeId,
-    entityId,
-    entityTypeId,
-    message: `Added note to entity ${entityId}`,
-  };
+    return {
+      verb: 'create',
+      entityType: 'Note',
+      intended: { entityTypeId, entityId, create: body },
+      apply: async () => {
+        const newId = idFrom(await client.v1Post<unknown>('Notes', body));
+        return {
+          result: {
+            success: true,
+            noteId: newId,
+            noteTypeId,
+            entityId,
+            entityTypeId,
+            message: `Added note to entity ${entityId}`,
+          },
+          newId: newId ?? undefined,
+          readBack: () => createdRowExists(client, 'Notes', newId),
+        };
+      },
+    };
+  });
 }

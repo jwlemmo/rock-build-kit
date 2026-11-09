@@ -16,6 +16,8 @@
  */
 
 import { RockClient } from '../rock-client.js';
+import { runLegacyWrite } from '../safety/index.js';
+import { idFrom, createdRowExists, CREATE_CALL_PROPS, CREATE_NOTE, type WriteCallParams } from './legacy-helpers.js';
 
 function lq(value: string): string {
   return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
@@ -151,7 +153,7 @@ export async function listPersonSteps(
 
 // ---------------- record_step ----------------
 
-export interface RecordStepParams {
+export interface RecordStepParams extends WriteCallParams {
   personId: number;
   stepTypeId: number;
   /** Status id: 1=Started, 2=Completed (default), 3=...  Override if you know the StepStatus you want. */
@@ -166,7 +168,7 @@ export const recordStepSchema = {
   name: 'record_step',
   description:
     'Record a Step for a person. Defaults to "Completed" status with today as the completion date. ' +
-    'Always confirm with the user before calling — Steps are persistent and reflect milestone completion.',
+    'Steps are persistent and reflect milestone completion.' + CREATE_NOTE,
   inputSchema: {
     type: 'object' as const,
     properties: {
@@ -180,8 +182,9 @@ export const recordStepSchema = {
       endDate: { type: 'string', description: 'End date (YYYY-MM-DD, optional)' },
       completedDate: { type: 'string', description: 'Completion date (YYYY-MM-DD, defaults to today)' },
       note: { type: 'string', description: 'Free-text note attached to the Step' },
+      ...CREATE_CALL_PROPS,
     },
-    required: ['personId', 'stepTypeId'],
+    required: ['personId', 'stepTypeId', 'reason'],
   },
 };
 
@@ -189,63 +192,76 @@ export async function recordStep(
   client: RockClient,
   params: RecordStepParams
 ): Promise<unknown> {
-  // Resolve PersonAliasId for the person (Rock requires PersonAliasId, not PersonId, on Steps)
-  const aliases = await client.v2Search<Array<{ id: number; aliasPersonId: number }>>(
-    'personAliases',
-    {
-      where: `AliasPersonId == ${params.personId}`,
-      sort: 'Id',
-      limit: 1,
-    }
-  );
-  if (!Array.isArray(aliases) || aliases.length === 0) {
-    throw new Error(`No PersonAlias found for personId ${params.personId}`);
-  }
-  const personAliasId = aliases[0].id;
-
-  // Resolve stepStatusId: if not provided, look up the default Completed status for the program
-  let stepStatusId = params.stepStatusId;
-  if (!stepStatusId) {
-    // Step types include their program; find a step status with IsCompleteStatus=true for that program
-    const stepType = await client.v2Get<{ stepProgramId: number }>(`stepTypes/${params.stepTypeId}`);
-    const statuses = await client.v2Search<Array<{ id: number; isCompleteStatus: boolean; name: string }>>(
-      'stepStatuses',
+  return runLegacyWrite('record_step', params, async () => {
+    // Resolve PersonAliasId for the person (Rock requires PersonAliasId, not PersonId, on Steps)
+    const aliases = await client.v2Search<Array<{ id: number; aliasPersonId: number }>>(
+      'personAliases',
       {
-        where: `StepProgramId == ${stepType.stepProgramId} && IsActive == true`,
-        sort: 'IsCompleteStatus descending, Order',
-        limit: 10,
+        where: `AliasPersonId == ${params.personId}`,
+        sort: 'Id',
+        limit: 1,
       }
     );
-    const completed = (Array.isArray(statuses) ? statuses : []).find((s) => s.isCompleteStatus);
-    if (completed) {
-      stepStatusId = completed.id;
-    } else if (Array.isArray(statuses) && statuses.length > 0) {
-      stepStatusId = statuses[0].id;
-    } else {
-      throw new Error(`No StepStatus found for the Step Program containing StepType ${params.stepTypeId}`);
+    if (!Array.isArray(aliases) || aliases.length === 0) {
+      throw new Error(`No PersonAlias found for personId ${params.personId}`);
     }
-  }
+    const personAliasId = aliases[0].id;
 
-  const todayISO = new Date().toISOString().slice(0, 10);
-  // v1 POST /api/Steps accepts PascalCase fields
-  const body: Record<string, unknown> = {
-    StepTypeId: params.stepTypeId,
-    PersonAliasId: personAliasId,
-    StepStatusId: stepStatusId,
-    CompletedDateTime: params.completedDate ?? todayISO,
-  };
-  if (params.startDate) body.StartDateTime = params.startDate;
-  if (params.endDate) body.EndDateTime = params.endDate;
-  if (params.note) body.Note = params.note;
+    // Resolve stepStatusId: if not provided, look up the default Completed status for the program
+    let stepStatusId = params.stepStatusId;
+    if (!stepStatusId) {
+      // Step types include their program; find a step status with IsCompleteStatus=true for that program
+      const stepType = await client.v2Get<{ stepProgramId: number }>(`stepTypes/${params.stepTypeId}`);
+      const statuses = await client.v2Search<Array<{ id: number; isCompleteStatus: boolean; name: string }>>(
+        'stepStatuses',
+        {
+          where: `StepProgramId == ${stepType.stepProgramId} && IsActive == true`,
+          sort: 'IsCompleteStatus descending, Order',
+          limit: 10,
+        }
+      );
+      const completed = (Array.isArray(statuses) ? statuses : []).find((s) => s.isCompleteStatus);
+      if (completed) {
+        stepStatusId = completed.id;
+      } else if (Array.isArray(statuses) && statuses.length > 0) {
+        stepStatusId = statuses[0].id;
+      } else {
+        throw new Error(`No StepStatus found for the Step Program containing StepType ${params.stepTypeId}`);
+      }
+    }
 
-  const newId = await client.v1Post<number>('Steps', body);
-  return {
-    success: true,
-    stepId: newId,
-    personId: params.personId,
-    stepTypeId: params.stepTypeId,
-    stepStatusId,
-    completedDate: body.CompletedDateTime,
-    message: `Recorded Step (type ${params.stepTypeId}) for person ${params.personId}`,
-  };
+    const todayISO = new Date().toISOString().slice(0, 10);
+    // v1 POST /api/Steps accepts PascalCase fields
+    const body: Record<string, unknown> = {
+      StepTypeId: params.stepTypeId,
+      PersonAliasId: personAliasId,
+      StepStatusId: stepStatusId,
+      CompletedDateTime: params.completedDate ?? todayISO,
+    };
+    if (params.startDate) body.StartDateTime = params.startDate;
+    if (params.endDate) body.EndDateTime = params.endDate;
+    if (params.note) body.Note = params.note;
+
+    return {
+      verb: 'create',
+      entityType: 'Step',
+      intended: { person: params.personId, create: body },
+      apply: async () => {
+        const newId = idFrom(await client.v1Post<unknown>('Steps', body));
+        return {
+          result: {
+            success: true,
+            stepId: newId,
+            personId: params.personId,
+            stepTypeId: params.stepTypeId,
+            stepStatusId,
+            completedDate: body.CompletedDateTime,
+            message: `Recorded Step (type ${params.stepTypeId}) for person ${params.personId}`,
+          },
+          newId: newId ?? undefined,
+          readBack: () => createdRowExists(client, 'Steps', newId),
+        };
+      },
+    };
+  });
 }

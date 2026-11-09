@@ -74,6 +74,9 @@ import {
   deriveToken,
   validateToken,
   captureRestSnapshot,
+  WriteRefused,
+  UNCERTAIN_OUTCOME_NOTE,
+  REASON_PARAM,
   type WriteOp,
 } from '../safety/index.js';
 
@@ -472,6 +475,7 @@ export interface EditBlockContentParams {
   confirmation_token?: string;
   label?: string;
   session_tag?: string;
+  reason?: string;
 }
 
 export const editBlockContentSchema = {
@@ -544,8 +548,9 @@ export const editBlockContentSchema = {
           'Optional: your Claude session id, recorded on the audit ledger entry alongside the ' +
           'operator\'s git identity, so "did my session touch prod?" is answerable later.',
       },
+      reason: REASON_PARAM,
     },
-    required: ['operation'],
+    required: ['operation', 'reason'],
   },
 };
 
@@ -607,7 +612,7 @@ function computeEdit(baseContent: string, params: EditBlockContentParams): Compu
     const expected = params.expected_count ?? 1;
     const indices = findAllIndices(baseContent, params.old_string);
     if (indices.length !== expected) {
-      throw new Error(
+      throw new WriteRefused(
         `edit_block_content: old_string occurs ${indices.length} time(s) in the current content, ` +
           `not the expected ${expected}. Pass expected_count:${indices.length} if that count is ` +
           'correct, or narrow old_string to a unique excerpt.'
@@ -625,7 +630,7 @@ function computeEdit(baseContent: string, params: EditBlockContentParams): Compu
     if (params.text === undefined) throw new Error(`edit_block_content (operation:"${op}") requires text.`);
     const indices = findAllIndices(baseContent, params.anchor);
     if (indices.length !== 1) {
-      throw new Error(
+      throw new WriteRefused(
         `edit_block_content: anchor occurs ${indices.length} time(s) in the current content, but ` +
           `operation:"${op}" requires exactly 1. Narrow anchor to a unique excerpt.`
       );
@@ -642,7 +647,7 @@ function computeEdit(baseContent: string, params: EditBlockContentParams): Compu
   if (!params.declared_sha256) throw new Error('edit_block_content (operation:"full_replace") requires declared_sha256.');
   const actualSha = sha256Hex(params.content);
   if (actualSha !== params.declared_sha256) {
-    throw new Error(
+    throw new WriteRefused(
       `edit_block_content (operation:"full_replace"): sha256(content) is ${actualSha}, which does ` +
         `not match declared_sha256 (${params.declared_sha256}). The content you passed does not ` +
         'match what you claim to have computed it from — recompute declared_sha256 from the exact ' +
@@ -716,7 +721,7 @@ async function resolveBlockIdToActiveRow(client: RockClient, blockId: number): P
   }
   const defaultRows = rows.filter((r) => isEmptyEntityValue(r.EntityValue));
   if (defaultRows.length === 0) {
-    throw new Error(
+    throw new WriteRefused(
       `edit_block_content: block_id ${blockId} has only context-specific HtmlContent rows (all have ` +
         'a non-empty EntityValue) — there is no default-context row to select as the active version. ' +
         'Pass html_content_id explicitly (surgical edits refuse to guess a fallback target).'
@@ -724,7 +729,7 @@ async function resolveBlockIdToActiveRow(client: RockClient, blockId: number): P
   }
   const active = selectActiveRow(defaultRows);
   if (!active) {
-    throw new Error(
+    throw new WriteRefused(
       `edit_block_content: no HtmlContent row for block_id ${blockId} currently satisfies the ` +
         'active-version rule (approved, in-window) — only a warned-fallback row would be selected. ' +
         'Pass html_content_id explicitly to target a specific row (surgical edits must not silently ' +
@@ -770,7 +775,7 @@ export async function editBlockContent(client: RockClient, params: EditBlockCont
   // ==================================================================== Phase 2: execute
   if (params.confirmation_token) {
     if (!params.base_sha256) {
-      throw new Error(
+      throw new WriteRefused(
         'edit_block_content: base_sha256 is required on the confirm call — echo back the ' +
           'base_sha256 the preview returned, so a mid-handshake content change can be caught ' +
           'before the write.'
@@ -783,10 +788,11 @@ export async function editBlockContent(client: RockClient, params: EditBlockCont
     // honest and more actionable error than "token mismatch" when the real cause is that
     // someone else edited the row mid-handshake.
     if (currentSha !== params.base_sha256) {
-      throw new Error(
+      throw new WriteRefused(
         `edit_block_content: the content changed since the preview — current sha256 is ${currentSha}, ` +
           `but the preview was based on ${params.base_sha256}. Get a fresh preview (re-call ` +
-          'edit_block_content WITHOUT confirmation_token) and re-confirm against the new base_sha256.'
+          'edit_block_content WITHOUT confirmation_token) and re-confirm against the new base_sha256.',
+        { entityType: 'HtmlContent', id: row.Id }
       );
     }
 
@@ -796,9 +802,10 @@ export async function editBlockContent(client: RockClient, params: EditBlockCont
     const op = deriveEditOp(row.Id, params, currentSha, newSha);
 
     if (!validateToken(op, params.confirmation_token)) {
-      throw new Error(
-        'Confirmation token mismatch — arguments changed since the preview, or the preview was ' +
-          'skipped. Re-call edit_block_content WITHOUT a token to get a fresh preview.'
+      throw new WriteRefused(
+        'Confirmation token mismatch — arguments or reason changed since the preview, or the preview was ' +
+          'skipped. Nothing was written. Re-call edit_block_content WITHOUT a token to get a fresh preview.',
+        { entityType: 'HtmlContent', id: row.Id }
       );
     }
 
@@ -849,7 +856,7 @@ export async function editBlockContent(client: RockClient, params: EditBlockCont
         newSha,
       },
       confirmationToken: params.confirmation_token,
-      result: { success: verifyOk },
+      result: { success: verifyOk, verified: verifyOk },
     });
 
     if (!verifyOk) {
@@ -857,6 +864,8 @@ export async function editBlockContent(client: RockClient, params: EditBlockCont
         phase: 'executed',
         success: false,
         verify: 'FAILED',
+        verified: false,
+        verification_note: UNCERTAIN_OUTCOME_NOTE,
         verb: 'edit',
         mode: 'rest',
         controller: 'HtmlContents',
@@ -886,6 +895,7 @@ export async function editBlockContent(client: RockClient, params: EditBlockCont
       length_chars_before: baseContent.length,
       length_chars_after: computed.newContent.length,
       length_delta_chars: computed.newContent.length - baseContent.length,
+      verified: true,
       cache_flushed: true,
       cache_flush_mechanism: 'ApprovedDateTime PATCH → Rock model-save pipeline → FlushCachedContent broadcast to all front-ends',
       before_snapshot_ref: snapRef,

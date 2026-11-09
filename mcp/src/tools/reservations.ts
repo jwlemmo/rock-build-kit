@@ -3,6 +3,20 @@
  */
 
 import { RockClient } from '../rock-client.js';
+import { runLegacyWrite } from '../safety/index.js';
+import {
+  pickFields,
+  fieldsMatch,
+  idFrom,
+  createdRowExists,
+  CREATE_CALL_PROPS,
+  TWO_PHASE_CALL_PROPS,
+  TWO_PHASE_NOTE,
+  CREATE_NOTE,
+  ALLOW_BULK_PARAM,
+  type WriteCallParams,
+  type TwoPhaseCallParams,
+} from './legacy-helpers.js';
 import pkg from 'rrule';
 const { rrulestr } = pkg;
 
@@ -72,7 +86,7 @@ export const searchReservationsSchema = {
 
 // --- Write tools ---
 
-export interface CreateReservationParams {
+export interface CreateReservationParams extends WriteCallParams {
   name: string;
   reservationTypeId: number;
   campusId?: number;
@@ -88,7 +102,7 @@ export interface CreateReservationParams {
   locationIds?: number[];
 }
 
-export interface UpdateReservationParams {
+export interface UpdateReservationParams extends TwoPhaseCallParams {
   id: number;
   name?: string;
   numberOfAttending?: number;
@@ -103,8 +117,8 @@ export const createReservationSchema = {
   description:
     'Create a new room reservation in Rock RMS. ' +
     'ReservationType IDs: 2=Baby/Wedding Shower, 3=Banquet, 4=Life Group/D-Group, 5=Conference, ' +
-    '6=Funeral, 7=Ministry Event, 8=Staff Meeting, 9=Wedding, 10=Film Team, 14=Outside Event. ' +
-    'Always confirm with the user before calling.',
+    '6=Funeral, 7=Ministry Event, 8=Staff Meeting, 9=Wedding, 10=Film Team, 14=Outside Event.' + CREATE_NOTE +
+    ' One call writes a Schedule, the Reservation and one row per location; over the bulk limit needs allowBulk:true.',
   inputSchema: {
     type: 'object' as const,
     properties: {
@@ -121,8 +135,10 @@ export const createReservationSchema = {
       startDateTime: { type: 'string', description: 'Event start date/time (ISO 8601)' },
       endDateTime: { type: 'string', description: 'Event end date/time (ISO 8601)' },
       locationIds: { type: 'array', items: { type: 'number' }, description: 'Location/room IDs to reserve' },
+      allowBulk: ALLOW_BULK_PARAM,
+      ...CREATE_CALL_PROPS,
     },
-    required: ['name', 'reservationTypeId', 'startDateTime', 'endDateTime'],
+    required: ['name', 'reservationTypeId', 'startDateTime', 'endDateTime', 'reason'],
   },
 };
 
@@ -130,8 +146,7 @@ export const updateReservationSchema = {
   name: 'update_reservation',
   description:
     'Update an existing reservation in Rock RMS. Only provided fields are updated. ' +
-    'ApprovalState: 0=Draft, 1=Unapproved, 2=Approved, 7=Cancelled. ' +
-    'Always confirm with the user before calling.',
+    'ApprovalState: 0=Draft, 1=Unapproved, 2=Approved, 7=Cancelled.' + TWO_PHASE_NOTE,
   inputSchema: {
     type: 'object' as const,
     properties: {
@@ -142,84 +157,131 @@ export const updateReservationSchema = {
       cleanupTime: { type: 'number', description: 'Cleanup time in minutes' },
       note: { type: 'string', description: 'Notes' },
       approvalState: { type: 'number', description: '0=Draft, 1=Unapproved, 2=Approved, 7=Cancelled' },
+      ...TWO_PHASE_CALL_PROPS,
     },
-    required: ['id'],
+    required: ['id', 'reason'],
   },
 };
 
 export async function createReservation(client: RockClient, params: CreateReservationParams): Promise<unknown> {
-  // Create a schedule for the reservation
-  const iCalContent = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'BEGIN:VEVENT',
-    `DTSTART:${params.startDateTime.replace(/[-:]/g, '').replace('.000Z', '').split('T').join('T')}`,
-    `DTEND:${params.endDateTime.replace(/[-:]/g, '').replace('.000Z', '').split('T').join('T')}`,
-    'END:VEVENT',
-    'END:VCALENDAR',
-  ].join('\r\n');
+  return runLegacyWrite('create_reservation', params, async () => {
+    // Create a schedule for the reservation
+    const iCalContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'BEGIN:VEVENT',
+      `DTSTART:${params.startDateTime.replace(/[-:]/g, '').replace('.000Z', '').split('T').join('T')}`,
+      `DTEND:${params.endDateTime.replace(/[-:]/g, '').replace('.000Z', '').split('T').join('T')}`,
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].join('\r\n');
+    const scheduleBody = {
+      iCalendarContent: iCalContent,
+      EffectiveStartDate: params.startDateTime,
+      EffectiveEndDate: params.endDateTime,
+    };
+    const reservationBody = {
+      Name: params.name,
+      ReservationTypeId: params.reservationTypeId,
+      CampusId: params.campusId || null,
+      ReservationMinistryId: params.ministryId || null,
+      NumberAttending: params.numberOfAttending || 0,
+      SetupTime: params.setupTime || 0,
+      CleanupTime: params.cleanupTime || 0,
+      Note: params.note || '',
+      ApprovalState: 1, // Start as Unapproved
+      EventContactEmail: params.eventContactEmail || '',
+      EventContactPhone: params.eventContactPhone || '',
+      AdministrativeContactEmail: params.eventContactEmail || '',
+      AdministrativeContactPhone: params.eventContactPhone || '',
+    };
+    const locationIds = params.locationIds ?? [];
 
-  const scheduleId = await client.v1Post<number>('/Schedules', {
-    iCalendarContent: iCalContent,
-    EffectiveStartDate: params.startDateTime,
-    EffectiveEndDate: params.endDateTime,
+    return {
+      verb: 'create',
+      entityType: 'Reservation',
+      rowCount: 2 + locationIds.length,
+      intended: { createSchedule: scheduleBody, createReservation: reservationBody, reserveLocations: locationIds },
+      notes: [
+        'Undo: rock_restore the ReservationLocation records first, then the Reservation, then the Schedule ' +
+          '(each is ledgered separately, listed in also_created_audit_ids).',
+      ],
+      apply: async () => {
+        const scheduleId = idFrom(await client.v1Post<unknown>('/Schedules', scheduleBody));
+        if (scheduleId == null) throw new Error('Schedules POST returned no Id; the reservation was not created.');
+        const extraCreates: Array<{ entityType: string; id: number; body: unknown; label: string }> = [
+          { entityType: 'Schedule', id: scheduleId, body: scheduleBody, label: 'Schedule' },
+        ];
+
+        // Create the reservation
+        const reservationId = idFrom(
+          await client.v1Post<unknown>('/Reservations', { ...reservationBody, ScheduleId: scheduleId })
+        );
+        if (reservationId == null) {
+          throw new Error(`Reservations POST returned no Id (Schedule ${scheduleId} was created). Check Rock before retrying.`);
+        }
+
+        // Add locations if provided
+        for (const locationId of locationIds) {
+          const rlBody = { ReservationId: reservationId, LocationId: locationId, ApprovalState: 1 };
+          const rlId = idFrom(await client.v1Post<unknown>('/ReservationLocations', rlBody));
+          if (rlId != null) {
+            extraCreates.push({ entityType: 'ReservationLocation', id: rlId, body: rlBody, label: `ReservationLocation ${locationId}` });
+          }
+        }
+
+        return {
+          result: {
+            success: true,
+            message: `Created reservation "${params.name}" (ID: ${reservationId})`,
+            reservationId,
+            scheduleId,
+            approvalState: 'Unapproved',
+          },
+          newId: reservationId,
+          extraCreates,
+          readBack: () => createdRowExists(client, 'Reservations', reservationId),
+        };
+      },
+    };
   });
-
-  // Create the reservation
-  const reservationId = await client.v1Post<number>('/Reservations', {
-    Name: params.name,
-    ReservationTypeId: params.reservationTypeId,
-    CampusId: params.campusId || null,
-    ReservationMinistryId: params.ministryId || null,
-    ScheduleId: scheduleId,
-    NumberAttending: params.numberOfAttending || 0,
-    SetupTime: params.setupTime || 0,
-    CleanupTime: params.cleanupTime || 0,
-    Note: params.note || '',
-    ApprovalState: 1, // Start as Unapproved
-    EventContactEmail: params.eventContactEmail || '',
-    EventContactPhone: params.eventContactPhone || '',
-    AdministrativeContactEmail: params.eventContactEmail || '',
-    AdministrativeContactPhone: params.eventContactPhone || '',
-  });
-
-  // Add locations if provided
-  if (params.locationIds && params.locationIds.length > 0) {
-    for (const locationId of params.locationIds) {
-      await client.v1Post('/ReservationLocations', {
-        ReservationId: reservationId,
-        LocationId: locationId,
-        ApprovalState: 1,
-      });
-    }
-  }
-
-  return {
-    success: true,
-    message: `Created reservation "${params.name}" (ID: ${reservationId})`,
-    reservationId,
-    scheduleId,
-    approvalState: 'Unapproved',
-  };
 }
 
 export async function updateReservation(client: RockClient, params: UpdateReservationParams): Promise<unknown> {
-  const body: Record<string, unknown> = {};
+  return runLegacyWrite('update_reservation', params, async () => {
+    const body: Record<string, unknown> = {};
 
-  if (params.name !== undefined) body.Name = params.name;
-  if (params.numberOfAttending !== undefined) body.NumberAttending = params.numberOfAttending;
-  if (params.setupTime !== undefined) body.SetupTime = params.setupTime;
-  if (params.cleanupTime !== undefined) body.CleanupTime = params.cleanupTime;
-  if (params.note !== undefined) body.Note = params.note;
-  if (params.approvalState !== undefined) body.ApprovalState = params.approvalState;
+    if (params.name !== undefined) body.Name = params.name;
+    if (params.numberOfAttending !== undefined) body.NumberAttending = params.numberOfAttending;
+    if (params.setupTime !== undefined) body.SetupTime = params.setupTime;
+    if (params.cleanupTime !== undefined) body.CleanupTime = params.cleanupTime;
+    if (params.note !== undefined) body.Note = params.note;
+    if (params.approvalState !== undefined) body.ApprovalState = params.approvalState;
 
-  if (Object.keys(body).length === 0) {
-    return { success: false, error: 'No fields provided to update' };
-  }
+    if (Object.keys(body).length === 0) {
+      return { verb: 'edit', entityType: 'Reservation', id: params.id, intended: null, noop: { success: false, error: 'No fields provided to update' } };
+    }
 
-  await client.v1Patch(`/Reservations/${params.id}`, body);
-
-  return { success: true, message: `Reservation ${params.id} updated` };
+    const row = await client.v1Get<unknown>(`/Reservations/${params.id}`);
+    return {
+      verb: 'edit',
+      entityType: 'Reservation',
+      id: params.id,
+      body,
+      before: pickFields(row, Object.keys(body)),
+      intended: { reservation: params.id, set: body },
+      apply: async () => {
+        await client.v1Patch(`/Reservations/${params.id}`, body);
+        return {
+          result: { success: true, message: `Reservation ${params.id} updated` },
+          readBack: async () => {
+            const after = await client.v1Get<unknown>(`/Reservations/${params.id}`);
+            return { verified: fieldsMatch(after, body), after: pickFields(after, Object.keys(body)) };
+          },
+        };
+      },
+    };
+  });
 }
 
 interface ReservationLocation {

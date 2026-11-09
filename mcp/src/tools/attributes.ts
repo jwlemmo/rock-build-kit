@@ -21,6 +21,8 @@
  */
 
 import { RockClient } from '../rock-client.js';
+import { runLegacyWrite } from '../safety/index.js';
+import { TWO_PHASE_CALL_PROPS, TWO_PHASE_NOTE, type TwoPhaseCallParams } from './legacy-helpers.js';
 
 function lq(value: string): string {
   return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
@@ -155,7 +157,7 @@ export async function getPersonAttributes(
 
 // ---------------- set_person_attribute ----------------
 
-export interface SetPersonAttributeParams {
+export interface SetPersonAttributeParams extends TwoPhaseCallParams {
   personId: number;
   key: string;
   value: string | number | boolean;
@@ -165,8 +167,7 @@ export const setPersonAttributeSchema = {
   name: 'set_person_attribute',
   description:
     'Set a Person AttributeValue. Provide attribute key (e.g. "SOM101Completed") and value. ' +
-    'Booleans should be passed as "True" / "False" strings to match Rock storage. ' +
-    'Always confirm with the user before calling.',
+    'Booleans should be passed as "True" / "False" strings to match Rock storage.' + TWO_PHASE_NOTE,
   inputSchema: {
     type: 'object' as const,
     properties: {
@@ -175,27 +176,81 @@ export const setPersonAttributeSchema = {
       value: {
         description: 'New value. Numbers/booleans are converted to strings; Rock booleans use "True"/"False".',
       },
+      ...TWO_PHASE_CALL_PROPS,
     },
-    required: ['personId', 'key', 'value'],
+    required: ['personId', 'key', 'value', 'reason'],
   },
 };
+
+const PERSON_ENTITY_TYPE_ID = 15;
+
+/** Current stored value of a Person attribute (by key), or null when no value row exists. */
+async function readPersonAttributeValue(
+  client: RockClient,
+  personId: number,
+  key: string
+): Promise<{ attributeId: number; attributeValueId: number | null; value: string | null }> {
+  const rows = await client.executeSql<Array<{ AttributeId: number; AttributeValueId: number | null; Value: string | null }>>(
+    `SELECT TOP 1 a.Id AS AttributeId, av.Id AS AttributeValueId, av.Value ` +
+      `FROM Attribute a LEFT JOIN AttributeValue av ON av.AttributeId = a.Id AND av.EntityId = ${personId} ` +
+      `WHERE a.EntityTypeId = ${PERSON_ENTITY_TYPE_ID} AND a.[Key] = '${key.replace(/'/g, "''")}' ` +
+      `AND ISNULL(a.EntityTypeQualifierColumn, '') = ''`
+  );
+  const row = Array.isArray(rows) ? rows[0] : undefined;
+  if (!row) throw new Error(`set_person_attribute: no Person attribute with key "${key}". Nothing was written.`);
+  return { attributeId: row.AttributeId, attributeValueId: row.AttributeValueId ?? null, value: row.Value ?? null };
+}
 
 export async function setPersonAttribute(
   client: RockClient,
   params: SetPersonAttributeParams
 ): Promise<unknown> {
-  const valueStr =
-    typeof params.value === 'boolean' ? (params.value ? 'True' : 'False') : String(params.value);
-  // v1 endpoint accepts attributeKey & attributeValue as query params
-  const path = `People/AttributeValue/${params.personId}?attributeKey=${encodeURIComponent(
-    params.key
-  )}&attributeValue=${encodeURIComponent(valueStr)}`;
-  await client.v1Post(path, {});
-  return {
-    success: true,
-    personId: params.personId,
-    key: params.key,
-    value: valueStr,
-    message: `Set ${params.key} = "${valueStr}" on person ${params.personId}`,
-  };
+  return runLegacyWrite('set_person_attribute', params, async () => {
+    if (!Number.isFinite(Number(params.personId))) {
+      throw new Error('set_person_attribute: personId must be a number.');
+    }
+    const personId = Number(params.personId);
+    const valueStr =
+      typeof params.value === 'boolean' ? (params.value ? 'True' : 'False') : String(params.value);
+    const current = await readPersonAttributeValue(client, personId, params.key);
+    return {
+      verb: 'edit',
+      entityType: 'AttributeValue',
+      id: `${personId}:${params.key}`,
+      body: { Value: valueStr },
+      before: { personId, key: params.key, attributeId: current.attributeId, attributeValueId: current.attributeValueId, Value: current.value },
+      intended: { person: personId, key: params.key, from: current.value, to: valueStr },
+      undo: {
+        supported: true,
+        kind: 'attribute-value',
+        personId,
+        key: params.key,
+        value: current.value ?? '',
+        how:
+          `rock_restore sets ${params.key} on person ${personId} back to ` +
+          (current.value === null ? 'an empty value (no value was stored before)' : `"${current.value}"`),
+      },
+      apply: async () => {
+        // v1 endpoint accepts attributeKey & attributeValue as query params
+        const path = `People/AttributeValue/${personId}?attributeKey=${encodeURIComponent(
+          params.key
+        )}&attributeValue=${encodeURIComponent(valueStr)}`;
+        await client.v1Post(path, {});
+        return {
+          result: {
+            success: true,
+            personId,
+            key: params.key,
+            value: valueStr,
+            previousValue: current.value,
+            message: `Set ${params.key} = "${valueStr}" on person ${personId}`,
+          },
+          readBack: async () => {
+            const after = await readPersonAttributeValue(client, personId, params.key);
+            return { verified: (after.value ?? '') === valueStr, after: { Value: after.value } };
+          },
+        };
+      },
+    };
+  });
 }

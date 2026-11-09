@@ -1,11 +1,10 @@
 /**
  * Resolve the operator's identity for write attribution.
  *
- * Rock sees a single shared REST key, so "who did this" can't come from Rock. We stamp
- * every write with the operator's git identity instead. Resolution order:
+ * Each person has their own Rock REST key, so Rock records who made a write. The local
+ * ledger stamps every write with the operator's git identity as well, so the ledger says who
+ * ran it without a lookup in Rock. Resolution order:
  *   ROCK_OPERATOR_EMAIL/NAME env  →  `git config user.email`/`user.name`  →  unknown.
- *
- * When per-person Rock keys arrive later, this is the only place that needs to change.
  */
 
 import { execSync } from 'node:child_process';

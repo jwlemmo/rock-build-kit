@@ -3,6 +3,8 @@
  */
 
 import { RockClient } from '../rock-client.js';
+import { runLegacyWrite } from '../safety/index.js';
+import { idFrom, createdRowExists, CREATE_CALL_PROPS, CREATE_NOTE, type WriteCallParams } from './legacy-helpers.js';
 
 function whereAnd(clauses: Array<string | undefined>): string | undefined {
   const kept = clauses.filter((c): c is string => !!c && c.length > 0);
@@ -77,7 +79,7 @@ export async function searchAttendance(
 // record_attendance
 // -----------------------------
 
-export interface RecordAttendanceParams {
+export interface RecordAttendanceParams extends WriteCallParams {
   personId: number;
   groupId: number;
   scheduleId?: number;
@@ -91,7 +93,7 @@ export const recordAttendanceSchema = {
   description:
     'Record an attendance entry for a person in a group in Rock RMS. ' +
     'startDateTime should be ISO 8601 format (e.g., "2026-04-12T09:00:00"). ' +
-    'didAttend defaults to true. Always confirm with the user before calling.',
+    'didAttend defaults to true.' + CREATE_NOTE,
   inputSchema: {
     type: 'object' as const,
     properties: {
@@ -101,8 +103,9 @@ export const recordAttendanceSchema = {
       locationId: { type: 'number', description: 'Location ID (optional)' },
       startDateTime: { type: 'string', description: 'Attendance date/time in ISO 8601 format' },
       didAttend: { type: 'boolean', description: 'Whether the person attended (default: true)' },
+      ...CREATE_CALL_PROPS,
     },
-    required: ['personId', 'groupId', 'startDateTime'],
+    required: ['personId', 'groupId', 'startDateTime', 'reason'],
   },
 };
 
@@ -110,39 +113,67 @@ export async function recordAttendance(
   client: RockClient,
   params: RecordAttendanceParams
 ): Promise<unknown> {
-  const person = await client.v2Get<{ primaryAliasId: number }>(`people/${params.personId}`);
+  return runLegacyWrite('record_attendance', params, async () => {
+    const person = await client.v2Get<{ primaryAliasId: number }>(`people/${params.personId}`);
 
-  const occurrenceDate = params.startDateTime.split('T')[0];
-  const occurrences = await client.v2Search<Array<{ id: number }>>('attendanceoccurrences', {
-    where: `GroupId == ${params.groupId} && OccurrenceDate == ${dt(occurrenceDate)}`,
-    limit: 1,
-  });
-
-  // v2 writes on Attendance / AttendanceOccurrence enforce per-entity edit and require
-  // extra non-nullable fields; v1 is permissive with the same REST key.
-  let occurrenceId: number;
-  if (occurrences && occurrences.length > 0) {
-    occurrenceId = occurrences[0].id;
-  } else {
-    occurrenceId = await client.v1Post<number>('AttendanceOccurrences', {
+    const occurrenceDate = params.startDateTime.split('T')[0];
+    const occurrences = await client.v2Search<Array<{ id: number }>>('attendanceoccurrences', {
+      where: `GroupId == ${params.groupId} && OccurrenceDate == ${dt(occurrenceDate)}`,
+      limit: 1,
+    });
+    const existingOccurrenceId = occurrences && occurrences.length > 0 ? occurrences[0].id : null;
+    const occurrenceBody = {
       GroupId: params.groupId,
       OccurrenceDate: occurrenceDate,
       ScheduleId: params.scheduleId ?? null,
       LocationId: params.locationId ?? null,
-    });
-  }
+    };
 
-  const attendanceId = await client.v1Post<number>('Attendances', {
-    OccurrenceId: occurrenceId,
-    PersonAliasId: person.primaryAliasId,
-    StartDateTime: params.startDateTime,
-    DidAttend: params.didAttend ?? true,
+    return {
+      verb: 'create',
+      entityType: 'Attendance',
+      rowCount: existingOccurrenceId == null ? 2 : 1,
+      intended: {
+        person: params.personId,
+        group: params.groupId,
+        startDateTime: params.startDateTime,
+        occurrence: existingOccurrenceId ?? { create: occurrenceBody },
+      },
+      apply: async () => {
+        // v2 writes on Attendance / AttendanceOccurrence enforce per-entity edit and require
+        // extra non-nullable fields; v1 is permissive with the same REST key.
+        let occurrenceId: number;
+        const extraCreates: Array<{ entityType: string; id: number; body: unknown; label: string }> = [];
+        if (existingOccurrenceId != null) {
+          occurrenceId = existingOccurrenceId;
+        } else {
+          const id = idFrom(await client.v1Post<unknown>('AttendanceOccurrences', occurrenceBody));
+          if (id == null) throw new Error('AttendanceOccurrences POST returned no Id; no attendance was recorded.');
+          occurrenceId = id;
+          extraCreates.push({ entityType: 'AttendanceOccurrence', id, body: occurrenceBody, label: 'AttendanceOccurrence' });
+        }
+
+        const attendanceId = idFrom(
+          await client.v1Post<unknown>('Attendances', {
+            OccurrenceId: occurrenceId,
+            PersonAliasId: person.primaryAliasId,
+            StartDateTime: params.startDateTime,
+            DidAttend: params.didAttend ?? true,
+          })
+        );
+
+        return {
+          result: {
+            success: true,
+            message: `Recorded attendance for person ${params.personId} in group ${params.groupId}`,
+            attendanceId,
+            occurrenceId,
+          },
+          newId: attendanceId ?? undefined,
+          extraCreates,
+          readBack: () => createdRowExists(client, 'Attendances', attendanceId),
+        };
+      },
+    };
   });
-
-  return {
-    success: true,
-    message: `Recorded attendance for person ${params.personId} in group ${params.groupId}`,
-    attendanceId,
-    occurrenceId,
-  };
 }

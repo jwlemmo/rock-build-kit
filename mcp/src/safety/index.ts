@@ -11,6 +11,26 @@ export * from './types.js';
 export { resolveGitIdentity } from './gitIdentity.js';
 export { checkBundleGate, isDevTarget, changelogOpenDir, BUNDLE_GATED_TOOLS } from './bundleGate.js';
 export { appendAudit, writeSnapshotFile, AUDIT_FILE, SNAPSHOT_DIR } from './audit.js';
+export {
+  WRITE_TOOLS,
+  isWriteTool,
+  WriteRefused,
+  bulkWriteMax,
+  enforceBulkCap,
+  readBack,
+  UNCERTAIN_OUTCOME_NOTE,
+  logDenial,
+  runWriteTool,
+  targetFromArgs,
+  REASON_PARAM,
+  ALLOW_BULK_PARAM,
+  CONFIRMATION_TOKEN_PARAM,
+  SESSION_TAG_PARAM,
+  LABEL_PARAM,
+  type ReadBackResult,
+} from './writeGuard.js';
+export { currentWriteContext, type WriteContext } from './writeContext.js';
+export { runLegacyWrite, type PreparedWrite, type AppliedWrite } from './legacyGuard.js';
 export { readManifest, recordCreated, MANIFEST_FILE } from './manifest.js';
 export { deriveToken, validateToken } from './confirm.js';
 export { captureRestSnapshot, captureSqlSnapshot } from './snapshot.js';

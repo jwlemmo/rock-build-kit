@@ -11,7 +11,7 @@ detail.
 
 ## ⚑ Rock v18 regressions (prod upgraded 7/28/26 — read this FIRST)
 
-Confirmed against Rock source, present in every 18.x release through 18.4.1 + develop — and **still present on 19.4.4** (prod + rockdev, 9/2026):
+Confirmed against Rock source, present in every 18.x release through 18.4.1 + develop — and **still present on 19.4.4** (one installation's production and sandbox, 9/2026):
 
 1. **Sectioned forms silently DROP per-field PreHtml/PostHtml.** Any FormAttribute with an
    `ActionFormSectionId` loses its PreHtml/PostHtml entirely (custom labels, help text, JS mount

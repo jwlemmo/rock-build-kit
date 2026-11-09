@@ -55,7 +55,7 @@
 
 import { createHash } from 'node:crypto';
 import { RockClient } from '../rock-client.js';
-import { resolveGitIdentity, appendAudit, recordCreated } from '../safety/index.js';
+import { resolveGitIdentity, appendAudit, recordCreated, enforceBulkCap, REASON_PARAM, ALLOW_BULK_PARAM } from '../safety/index.js';
 
 // IDs are discovered from this target before ANY write; never copied from another church.
 async function discoverPageIds(client: RockClient, params: CreatePageBundleParams) {
@@ -130,6 +130,8 @@ export interface CreatePageBundleParams {
   manifest_key_prefix?: string;
   label?: string;
   session_tag?: string;
+  reason?: string;
+  allowBulk?: boolean;
 }
 
 export const createPageBundleSchema = {
@@ -159,7 +161,9 @@ export const createPageBundleSchema = {
     'object is individually undoable) and reports created_so_far with each piece\'s auditId. ' +
     'Every created object (page, route, block, html content, each auth row) gets its OWN audit ' +
     'ledger record (logs/changes.jsonl) and manifest entry, so rock_restore can undo any single ' +
-    'piece without touching the rest.',
+    'piece without touching the rest. The object count (page, route, block, html content, auth ' +
+    'rows) is checked against the bulk limit (ROCK_MCP_BULK_WRITE_MAX, default 25) before anything ' +
+    'is written; more needs allowBulk:true.',
   inputSchema: {
     type: 'object' as const,
     properties: {
@@ -188,8 +192,10 @@ export const createPageBundleSchema = {
           'Optional: your Claude session id, recorded on every object\'s audit ledger entry ' +
           'alongside the operator\'s git identity, so "did my session touch prod?" is answerable later.',
       },
+      reason: REASON_PARAM,
+      allowBulk: ALLOW_BULK_PARAM,
     },
-    required: ['name', 'parent_page_id', 'content'],
+    required: ['name', 'parent_page_id', 'content', 'reason'],
   },
 };
 
@@ -240,6 +246,13 @@ function validateParams(params: CreatePageBundleParams): { route?: string; route
 
 export async function createPageBundle(client: RockClient, params: CreatePageBundleParams): Promise<unknown> {
   const { route, routeStripped } = validateParams(params);
+  // Bulk cap: count every object this call will create before writing any of them.
+  const roleCount = params.allow_role_ids?.length ?? 0;
+  const plannedObjects = 3 + (route ? 1 : 0) + (roleCount > 0 ? roleCount + 1 : 0);
+  enforceBulkCap(plannedObjects, 'create_page_bundle call (objects: page, route, block, html content, auth rows)', {
+    entityType: 'Page',
+    id: params.parent_page_id,
+  });
   const operator = resolveGitIdentity();
   const sessionTag = params.session_tag;
   const manifestSection = params.manifest_section ?? 'page-bundles';
@@ -503,6 +516,8 @@ export async function createPageBundle(client: RockClient, params: CreatePageBun
     auth_ids: authIds.length > 0 ? authIds : undefined,
     url_hint: urlHint,
     verified,
+    all_verified: Object.values(verified).every(Boolean),
+    planned_objects: plannedObjects,
     warnings,
     audit_ids: auditIds,
     manifest: { section: manifestSection, key_prefix: manifestKeyPrefix },
