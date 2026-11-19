@@ -201,7 +201,10 @@ export const addGroupMemberSchema = {
   name: 'add_group_member',
   description:
     "Add a person to a group in Rock RMS. roleId defaults to the group type's default role. " +
-    'status: 0=Inactive, 1=Active (default), 2=Pending.' + CREATE_NOTE,
+    'status: 0=Inactive, 1=Active (default), 2=Pending. ' +
+    "Security roles go through Rock's own save logic when ROCK_ROLE_MEMBER_ENDPOINT names the installed " +
+    'role-member Lava endpoint (takes effect at once, no cache clear, reactivates an inactive membership); ' +
+    'roleId and status are ignored for them. Without that endpoint a security-role add is refused.' + CREATE_NOTE,
   inputSchema: {
     type: 'object' as const,
     properties: {
@@ -231,6 +234,18 @@ export const removeGroupMemberSchema = {
 
 export async function addGroupMember(client: RockClient, params: AddGroupMemberParams): Promise<unknown> {
   return runLegacyWrite('add_group_member', params, async () => {
+    // Rock's v1 REST refuses security-role adds (403), and a raw SQL row is invisible to Rock's
+    // role cache until a cache clear and writes no History. Observed on Rock 19.8.1
+    // (2026-11-08/09): {% modifygroupmember %} in an admin-only Lava endpoint takes effect at
+    // once, stamps created/modified-by with the key's person and writes History. The endpoint's
+    // Lava source and setup are in ops/rock-role-member-endpoint/.
+    const roleCheck = await client.v2Search<Array<{ isSecurityRole?: boolean }>>('groups', {
+      where: `Id == ${params.groupId}`,
+      limit: 1,
+    });
+    if (roleCheck && roleCheck[0] && roleCheck[0].isSecurityRole === true) {
+      return prepareRoleMemberAdd(client, params);
+    }
     let roleId = params.roleId;
     if (!roleId) {
       // v2 GET /groups/{id} enforces per-entity View security strictly, so even with
@@ -304,6 +319,87 @@ export async function addGroupMember(client: RockClient, params: AddGroupMemberP
       },
     };
   });
+}
+
+function roleMemberEndpoint(): { app: string; endpoint: string } {
+  const raw = (process.env.ROCK_ROLE_MEMBER_ENDPOINT ?? '').trim();
+  const m = /^([A-Za-z0-9_-]+)\/([A-Za-z0-9_-]+)$/.exec(raw);
+  if (!m) {
+    throw new Error(
+      'add_group_member: group is a security role. Rock refuses role adds over REST, and raw SQL rows are invisible ' +
+        'until a cache clear. Install the role-member Lava endpoint (ops/rock-role-member-endpoint/README.md) on this ' +
+        'server and set ROCK_ROLE_MEMBER_ENDPOINT to its "app-slug/endpoint-slug", then call again.'
+    );
+  }
+  return { app: m[1], endpoint: m[2] };
+}
+
+async function prepareRoleMemberAdd(client: RockClient, params: AddGroupMemberParams) {
+  if (params.status !== undefined && params.status !== 1) {
+    throw new Error(
+      'add_group_member: security roles only take active members here. Leave status out, or change an existing member in Rock.'
+    );
+  }
+  const target = roleMemberEndpoint();
+  const active = await client.v2Search<Array<{ id: number }>>('groupmembers', {
+    where: `GroupId == ${params.groupId} && PersonId == ${params.personId} && GroupMemberStatus == 1`,
+    limit: 1,
+  });
+  if (active && active.length > 0) {
+    return {
+      verb: 'create' as const, entityType: 'GroupMember', intended: null,
+      noop: {
+        success: true,
+        message: `Person ${params.personId} already has security role ${params.groupId}.`,
+        next: 'Nothing to do.',
+      },
+    };
+  }
+  return {
+    verb: 'create' as const,
+    entityType: 'GroupMember',
+    intended: {
+      via: `Lava endpoint ${target.app}/${target.endpoint} ({% modifygroupmember %})`,
+      group: params.groupId,
+      person: params.personId,
+      role: "the role group type's default role",
+    },
+    notes: [
+      'Rock applies a security-role add at once; no cache clear is needed.',
+      'If the person has an inactive membership, it is reactivated instead of adding a second row.',
+    ],
+    apply: async () => {
+      const r = await client.lavaAppPost<{ ok: boolean; result: string; groupMemberId?: number; group?: string; next?: string }>(
+        target.app, target.endpoint, { personId: params.personId, groupId: params.groupId, reason: params.reason }
+      );
+      if (!r || r.ok !== true) {
+        throw new Error(`add_group_member: Rock answered "${r?.result ?? 'no answer'}". ${r?.next ?? ''}`.trim());
+      }
+      const id = typeof r.groupMemberId === 'number' ? r.groupMemberId : null;
+      return {
+        result: {
+          success: true,
+          message: `${r.result === 'reactivated' ? 'Reactivated' : 'Added'} person ${params.personId} in security role ${r.group ?? params.groupId}`,
+          groupMemberId: id,
+          how: r.result,
+          // A reactivation has no new row for rock_restore to delete, so say how to undo it instead.
+          ...(r.result === 'reactivated'
+            ? { next: 'Done. Tell the user what changed. rock_restore cannot undo a reactivation; to undo it, set the membership inactive in Rock.' }
+            : {}),
+        },
+        // Only a brand-new row is undone by deleting it; a reactivation has no newId to delete.
+        newId: r.result === 'added' && id != null ? id : undefined,
+        readBack: async () => {
+          if (id == null) return { verified: false, note: 'The endpoint returned no GroupMember Id.' };
+          const rows = await client.executeSql(
+            `SELECT Id, GroupMemberStatus, GroupTypeId FROM GroupMember WHERE Id = ${Number(id)} AND IsArchived = 0`
+          );
+          const row = Array.isArray(rows) ? (rows[0] as Record<string, unknown> | undefined) : undefined;
+          return { verified: !!row && Number(row.GroupMemberStatus) === 1, after: row };
+        },
+      };
+    },
+  };
 }
 
 export async function removeGroupMember(

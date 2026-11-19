@@ -44,3 +44,11 @@ Documentation and skill changes (skills, reference, ops, config examples), plus 
 - `mode:"sql"` preflight and Auth lockout guard. Time stamps use `ROCK_TIMEZONE` (a Windows time-zone id); with it unset, `GETDATE()` is refused with instructions and no time columns are added. Nothing assumes a particular zone.
 - Offline coverage: 9 new suites under `mcp/test/offline/` (two-phase, bulk cap, bundle gate, creates and restore, schemas, SQL preflight, SQL row guard, Auth guard, security-role restore), all passing inside `npm test`.
 - The upstream installation live-tested the same safety layer against its own development Rock 19.8.1 server on 2026-11-08; that test is not a claim about your church's server. Run your own dev checks per SETUP.md.
+
+## Version 1.4.0 — 2026-11-19
+
+- `cd mcp && npm run build` completed cleanly; `npm test` passed 16 of 16 suites, and `test/offline/run-all.mjs` passed 10 of 10 files, including the new `role-member-and-next-step.test.mjs` (24 checks: role adds refused without the endpoint, routed to it with person/group/reason when set, no v1 REST or SQL write, read-back and undo id, reactivation says it cannot be undone by rock_restore; next-step text, including the real uncertain-outcome note; merged-record warning).
+- `get_build_guide` returned content for `build`, `build-cache-flush`, `build-pages-and-blocks` and `access` from `dist/`. `mcp/guides/build.md` and `build-*.md` are byte copies of `skills/rock-build/SKILL.md` and its `reference/` files; `query.md` and `access.md` are byte copies of their skills.
+- The rock-build split was checked line by line: every non-blank line of the 812-line guide appears in the new `SKILL.md` or a reference file.
+- The role-member endpoint's Lava was tested on one installation's sandbox and production (19.8.1). This kit's copy adds one guard after an independent review (a reason containing `[[` or `]]` is refused, since it would be parsed as entity-command markup); that guard was not run against a server for this release.
+- No Rock server was contacted for these changes.

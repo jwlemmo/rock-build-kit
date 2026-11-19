@@ -1,0 +1,44 @@
+{% assign b = RawBody | FromJSON %}
+{% assign pid = b.personId | AsInteger %}
+{% assign gid = b.groupId | AsInteger %}
+{% assign reason = b.reason | Default:'' | Trim %}
+{% assign bad = false %}
+{% if pid == null or gid == null or reason == '' %}{% assign bad = true %}{% endif %}
+{% comment %}The reason lands inside modifygroupmember's body, where [[ ]] markers would be parsed as properties.{% endcomment %}
+{% if reason contains '[[' or reason contains ']]' %}{% assign bad = true %}{% endif %}
+{% if bad == false %}
+{% sql return:'chk' %}
+SELECT g.Id AS GroupId, g.Name AS GroupName, gt.DefaultGroupRoleId AS RoleId
+  , (SELECT COUNT(*) FROM Person p WHERE p.Id = {{ pid }} AND p.IsDeceased = 0) AS PersonOk
+  , ISNULL((SELECT TOP 1 gm.Id FROM GroupMember gm WHERE gm.GroupId = g.Id AND gm.PersonId = {{ pid }} AND gm.IsArchived = 0 ORDER BY gm.Id), 0) AS MemberId
+  , ISNULL((SELECT TOP 1 gm.GroupMemberStatus FROM GroupMember gm WHERE gm.GroupId = g.Id AND gm.PersonId = {{ pid }} AND gm.IsArchived = 0 ORDER BY gm.Id), -1) AS MemberStatus
+FROM [Group] g
+JOIN GroupType gt ON gt.Id = g.GroupTypeId
+WHERE g.Id = {{ gid }} AND g.IsSecurityRole = 1 AND g.IsActive = 1 AND g.IsArchived = 0
+{% endsql %}
+{% assign c = chk | First %}
+{% if c == null or c.PersonOk != 1 or c.RoleId == null %}{% assign bad = true %}{% endif %}
+{% endif %}
+{% if bad %}
+{"ok":false,"result":"not valid","next":"Check that personId is a living person, groupId is an active security role and reason is filled in, then call again."}
+{% elsif c.MemberStatus == 1 %}
+{"ok":true,"result":"already a member","groupMemberId":{{ c.MemberId }},"group":{{ c.GroupName | ToJSON }},"next":"Nothing to do. The person already has this role."}
+{% else %}
+{% if c.MemberId > 0 %}{% assign what = 'reactivated' %}{% else %}{% assign what = 'added' %}{% endif %}
+{% modifygroupmember id:'{{ c.MemberId }}' return:'gm' securityenabled:'false' %}
+[[ property name:'GroupId' ]]{{ c.GroupId }}[[ endproperty ]]
+[[ property name:'PersonId' ]]{{ pid }}[[ endproperty ]]
+[[ property name:'GroupRoleId' ]]{{ c.RoleId }}[[ endproperty ]]
+[[ property name:'GroupMemberStatus' ]]1[[ endproperty ]]
+[[ property name:'Note' ]]{{ reason | Truncate:200 }}[[ endproperty ]]
+{% endmodifygroupmember %}
+{% sql return:'after' %}
+SELECT TOP 1 gm.Id, gm.GroupMemberStatus FROM GroupMember gm WHERE gm.GroupId = {{ c.GroupId }} AND gm.PersonId = {{ pid }} AND gm.IsArchived = 0 ORDER BY gm.Id
+{% endsql %}
+{% assign a = after | First %}
+{% if a != null and a.GroupMemberStatus == 1 %}
+{"ok":true,"result":"{{ what }}","groupMemberId":{{ a.Id }},"group":{{ c.GroupName | ToJSON }},"next":"Done. Rock applies it at once, so no cache clear is needed. Record the change in the ledger."}
+{% else %}
+{"ok":false,"result":"not saved","next":"Rock did not save the membership. Do not retry blindly. Check GroupMember for this person and group first."}
+{% endif %}
+{% endif %}

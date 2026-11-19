@@ -11,6 +11,7 @@ All 55 upstream tools are retained, plus get_build_guide for clients without loc
 - **Read-back.** Every executed write re-reads its target and reports `verified: true/false`. Nothing is ever retried automatically; when `verified` is false, check in Rock before trying again.
 - **SQL writes** (`rock_create`/`rock_edit`/`rock_delete` with `mode:"sql"`) pass a preflight: GETDATE()/SYSDATETIME() and the other database-clock functions are refused (set `ROCK_TIMEZONE` to the Rock server's Windows time-zone id to get a ready-made "now" expression; the kit assumes no zone), INSERTs are checked against the table's real columns (missing NOT NULL columns, unknown columns, `IsSystem` on tables without it), GroupMember INSERTs must set `GroupTypeId`, and missing Created/Modified audit columns are added from the API key's own person. Writes to the `Auth` table also pass a lockout guard that refuses removing or denying the stock "RSR - Rock Administration" role's access or the API key person's own access.
 - **Dev bundle gate.** When `ROCK_REQUIRE_CHANGE_BUNDLE=1` and the target host is `ROCK_DEV_HOST`, build writes need the operator's open change bundle (see CHANGELOG-SETUP.md).
+- **Next step on every answer.** Every write result and every refusal ends with a `next` line (or `Next:` in an error) telling the agent what to do: stop and show the preview, report and offer the undo, or check Rock before retrying.
 - `flush_cache` is ledgered but needs no reason; it only bumps a timestamp so Rock rebuilds its cache.
 
 | Tool | Category |
@@ -26,7 +27,7 @@ All 55 upstream tools are retained, plus get_build_guide for clients without loc
 | `search_groups` | Read |
 | `get_group` | Read |
 | `update_group` | Write — two-phase |
-| `add_group_member` | Write — ledgered create |
+| `add_group_member` | Write — ledgered create (security roles go through the optional role-member Lava endpoint set by `ROCK_ROLE_MEMBER_ENDPOINT`; refused without it) |
 | `remove_group_member` | Write — two-phase (Rock may archive instead of delete; restore un-archives) |
 | `search_attendance` | Read |
 | `record_attendance` | Write — ledgered create |
@@ -34,7 +35,7 @@ All 55 upstream tools are retained, plus get_build_guide for clients without loc
 | `get_metrics` | Read |
 | `list_metric_categories` | Read |
 | `upsert_metric_value` | Write — new value is a ledgered create; overwrite is two-phase |
-| `execute_sql` | Read |
+| `execute_sql` | Read (adds `mergedRecordWarning` when a giving or attendance query filters on one PersonAliasId) |
 | `get_schema` | Read |
 | `search_reservations` | Read |
 | `create_reservation` | Write — ledgered create |

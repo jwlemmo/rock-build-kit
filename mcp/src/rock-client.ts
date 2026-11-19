@@ -120,7 +120,8 @@ export class RockClient {
     url: string,
     body?: unknown,
     contentType: string = 'application/json',
-    retries?: number
+    retries?: number,
+    extraHeaders: Record<string, string> = {}
   ): Promise<Response> {
     // Reads default to one retry on transient failures. Writes are NEVER auto-retried
     // unless the caller opts in: a timed-out or 5xx'd POST may still have committed
@@ -137,7 +138,7 @@ export class RockClient {
       try {
         const res = await fetch(url, {
           method,
-          headers: this.buildHeaders(body !== undefined ? contentType : undefined),
+          headers: { ...this.buildHeaders(body !== undefined ? contentType : undefined), ...extraHeaders },
           body: body === undefined ? undefined : typeof body === 'string' ? body : JSON.stringify(body),
           signal: controller.signal,
         });
@@ -244,6 +245,27 @@ export class RockClient {
     }
     const text = await res.text();
     return (text ? JSON.parse(text) : {}) as T;
+  }
+
+  /**
+   * POST JSON to a Rock Lava Application endpoint: /api/v2/lava-app/1/{app}/{endpoint}.
+   * Sends the Helix CSRF header the endpoint requires (without it Rock answers 401). Never
+   * retried: these endpoints write. Returns the parsed JSON body, or throws with the status.
+   * Observed on Rock 19.8.1 (2026-11-09): an endpoint or application whose
+   * AdditionalSettingsJson is NULL answers 404 as if it did not exist.
+   */
+  async lavaAppPost<T>(app: string, endpoint: string, body: Record<string, unknown>): Promise<T> {
+    const url = `${this.apiUrl}/v2/lava-app/1/${encodeURIComponent(app)}/${encodeURIComponent(endpoint)}`;
+    const res = await this.request('POST', url, body, 'application/json', 0, { 'X-Helix-CSRF-Protection': 'true' });
+    const text = await res.text();
+    if (!res.ok) {
+      throw new Error(`Rock Lava endpoint ${app}/${endpoint} → ${res.status}${text ? ': ' + text.slice(0, 500) : ''}`);
+    }
+    try {
+      return JSON.parse(text.trim()) as T;
+    } catch {
+      throw new Error(`Rock Lava endpoint ${app}/${endpoint} returned non-JSON: ${text.slice(0, 500)}`);
+    }
   }
 
   /** PATCH (partial update) a v2 record. */

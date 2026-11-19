@@ -11,7 +11,7 @@ Collected from Spark's guidance and other Rock builders' published notes, restat
 - **Family and campus without a join:** `Person.PrimaryFamilyId` and `Person.PrimaryCampusId` save a trip through GroupMember.
 - **Date groupings:** columns ending in `DateKey` join to `AnalyticsSourceDate`, which already carries week, month and fiscal-period columns. No date arithmetic needed.
 - **Large tables:** filter the indexed columns first — History by `EntityTypeId`, `EntityId`, then `CreatedDateTime`; Interaction by `InteractionComponentId`.
-- **One person's records:** resolve to `PersonId` first. Matching a single `*PersonAliasId` misses the person's other aliases after a merge.
+- **One person's records: filter on `PersonId`, never on one `*PersonAliasId`.** Join `PersonAlias pa ON pa.Id = x.<…>PersonAliasId` and filter `pa.PersonId = <id>` (for the viewer, `{{ CurrentPerson.Id }}`, not `{{ CurrentPerson.PrimaryAliasId }}`). A merged person keeps every old alias, and their older gifts and check-ins stay on them. `execute_sql` adds a `mergedRecordWarning` when a giving or attendance query breaks this. (measured on Rock 19.8.1, 2026-11-09)
 - **Audit columns:** model tables have `CreatedDateTime`, `ModifiedDateTime`, `CreatedByPersonAliasId`, `ModifiedByPersonAliasId` (alias ids, not person ids); lighter tables such as `PersonAlias` don't. `IsSystem` exists on some tables only.
 - **Portable SQL:** look up EntityTypeId by `Name` and other rows by `Guid`; no hard-coded ids.
 - **Location has no CampusId:** walk `Campus.LocationId` and `Location.ParentLocationId` with a recursive CTE.

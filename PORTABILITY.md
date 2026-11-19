@@ -25,3 +25,15 @@ Adds church-neutral guidance learned on Rock 19.8.1. Measured facts are labeled 
 - `config/.env.example` documents `ROCK_TIMEZONE` and `ROCK_MCP_BULK_WRITE_MAX`.
 
 No church-specific IDs, hosts, people or counts were imported.
+
+## Version 1.4.0 — 2026-11-19
+
+Adds church-neutral lessons from 2026-11-09 to 2026-11-18. Measured facts are again labeled "observed on Rock 19.8.1" (one installation).
+
+- MCP: every write result and refusal ends with a next step for the agent (`src/safety/nextStep.ts`). `execute_sql` adds a `mergedRecordWarning` when a giving or attendance query filters on one `PersonAliasId`. `add_group_member` routes security-role groups through an optional admin-only Lava endpoint (`ROCK_ROLE_MEMBER_ENDPOINT`, source and setup in `ops/rock-role-member-endpoint/`) and refuses them without it, instead of a v1 REST call Rock rejects. New offline suite `role-member-and-next-step.test.mjs`.
+- rock-build: split into a short `SKILL.md` plus ten topic files under `skills/rock-build/reference/`, following Anthropic's skill guidance (short main file, detail read on demand, contents lists on long files). Text moved verbatim. `get_build_guide` serves each topic as `build-<topic>`. New rules: lock View, Edit and Administrate together (with a page-chain query to find inherited Edit), an explicit Deny All Users also locks out admins, staff pages must work on phones and in Rock's dark mode, filter person records on `PersonId`, Spark-style tool answers.
+- rock-change-management: two extra checks when locking a page or block to a short list, and a phone/dark-mode check for staff pages. rock-grant-access and rock-query match.
+- rock-sandbox-refresh: "Lessons from real refreshes" — guide-only rule, sandbox-only work, data age and version checks, copy and file-move traps, production domains still in the restored database, SMS/push mediums and jobs that stay on, and putting the financial gateway in test mode.
+- Field notes: five new observations from 19.8.1.
+
+No church-specific IDs, hosts, people or counts were imported.

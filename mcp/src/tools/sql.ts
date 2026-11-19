@@ -89,7 +89,10 @@ export async function executeSql(client: RockClient, params: ExecuteSqlParams): 
   // into actionable hints on the way out.
   try {
     const result = capResult(await client.executeSql(queryToRun));
-    return limitNote ? withLimitNote(result, limitNote) : result;
+    const shaped = limitNote ? withLimitNote(result, limitNote) : result;
+    const warning = mergedRecordWarning(params.query);
+    if (!warning) return shaped;
+    return Array.isArray(shaped) ? { mergedRecordWarning: warning, rows: shaped } : { mergedRecordWarning: warning, ...(shaped as Record<string, unknown>) };
   } catch (err) {
     throw new Error(translateSqlError(err instanceof Error ? err.message : String(err)));
   }
@@ -177,4 +180,20 @@ function translateSqlError(msg: string): string {
     return `${msg}\nHint: "${keyword[1]}" is a reserved T-SQL keyword — Rock has literal columns named Order, Group, etc.; bracket it everywhere it appears as a column: [${keyword[1]}].`;
   }
   return msg;
+}
+
+/**
+ * Giving and attendance hang off PersonAlias, and a merged person keeps every old alias. Filtering
+ * on ONE alias (often CurrentPerson.PrimaryAliasId) silently drops the rest. Returns a warning
+ * when a giving/attendance query compares an *PersonAliasId column to a single value or a literal
+ * list; null otherwise.
+ */
+export function mergedRecordWarning(sql: string): string | null {
+  if (!/\b(FinancialTransaction|FinancialScheduledTransaction|FinancialPledge|Attendance)\b/i.test(sql)) return null;
+  if (!/\b\w*PersonAliasId\s*(=|IN\s*\()\s*(@|\d|'|N')/i.test(sql)) return null;
+  return (
+    'This query filters giving or attendance on one PersonAliasId value. A merged person keeps their old aliases, ' +
+    'so their older records are missed. Join PersonAlias and filter on PersonId instead, e.g. ' +
+    'JOIN PersonAlias pa ON pa.Id = ft.AuthorizedPersonAliasId WHERE pa.PersonId = <id>. Check the rows below with that in mind.'
+  );
 }

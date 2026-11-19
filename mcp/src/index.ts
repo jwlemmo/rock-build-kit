@@ -5,6 +5,7 @@
  * A read-only MCP server for interacting with Rock RMS REST API
  */
 
+import { withNextStep, errorWithNextStep } from './safety/nextStep.js';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
@@ -614,7 +615,7 @@ function wireHandlers(server: Server, rockClient: RockClient): void {
       try {
         // Every write tool runs under the shared write rules (reason required, dev bundle gate,
         // bulk cap, refusals ledgered); read tools pass straight through.
-        const result = await runWriteTool(name, args, () => callTool(rockClient, name, args));
+        const result = withNextStep(name, await runWriteTool(name, args, () => callTool(rockClient, name, args)));
 
         logToolCall({
           tool: name,
@@ -633,7 +634,7 @@ function wireHandlers(server: Server, rockClient: RockClient): void {
           ],
         };
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage = errorWithNextStep(name, error instanceof Error ? error.message : String(error));
         logToolCall({
           tool: name,
           args,

@@ -71,6 +71,7 @@ export function stubClient(handlers = {}) {
     v2Patch: call('v2Patch'),
     executeSql: call('executeSql'),
     executeSqlCommand: call('executeSqlCommand'),
+    lavaAppPost: call('lavaAppPost'),
   };
   return { client, calls, writes: () => calls.filter((c) => /Post|Patch|Delete|Command/.test(c.method)) };
 }
